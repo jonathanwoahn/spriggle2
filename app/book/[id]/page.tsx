@@ -1,11 +1,66 @@
 import BookCarousel from "@/components/book-carousel";
-import { Box, Button, Chip, Typography } from "@mui/material";
+import { AppBar, Box, Button, Chip, Drawer, IconButton, List, ListItem, ListItemButton, ListItemText, Toolbar, Typography } from "@mui/material";
 import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer";
 import { Grid2 as Grid } from '@mui/material';
-import ListIcon from '@mui/icons-material/List';
+import ChaptersButton from "./chapters-button";
 
-export default function BookPage() {
+
+const BOOKS: { title: string, author: string }[] = [
+  {
+    title: "The Boxcar Children",
+    author: "Gertrude Chandler Warner"
+  },
+  {
+    title: "Magic Tree House: Dinosaurs Before Dark",
+    author: "Mary Pope Osborne"
+  },
+  {
+    title: "The Adventures of Tom Sawyer",
+    author: "Mark Twain"
+  },
+  {
+    title: "Charlotte's Web",
+    author: "E.B. White"
+  },
+  {
+    title: "Anne of Green Gables",
+    author: "L.M. Montgomery"
+  },
+  {
+    title: "Little House on the Prairie",
+    author: "Laura Ingalls Wilder"
+  },
+  {
+    title: "Harry Potter and the Sorcerer's Stone",
+    author: "J.K. Rowling"
+  },
+  {
+    title: "The Chronicles of Narnia: The Lion, the Witch, and the Wardrobe",
+    author: "C.S. Lewis"
+  },
+  {
+    title: "Percy Jackson & the Olympians: The Lightning Thief",
+    author: "Rick Riordan"
+  },
+  {
+    title: "The Secret Garden",
+    author: "Frances Hodgson Burnett"
+  }
+];
+
+export default async function BookPage({params}: {params: {id: number | string}}) {
+  const {id} = await params;
+  const book = BOOKS[id as number];
+  
+  const labels = [
+    "Friendship",
+    "Animal Stories",
+    "Classic Children's Literature",
+    "Farm Life",
+    "Selflessness and Sacrifice",
+  ];
+  
   return (
     <>
       <Box sx={{ width: '100%', maxWidth: '840px', marginLeft: 'auto', marginRight: 'auto', }}>
@@ -19,27 +74,21 @@ export default function BookPage() {
                   </Box>
                 </Grid>
                 <Grid size={{xs: 12, md: 7}}>
-                  <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: 4}}>
-                    <Typography variant="h5" component="h5">Charlotte's Web</Typography>
-                    <Typography variant="body2" component="p">By E.B. White</Typography>
+                  <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2},}}>
+                    <Typography variant="h5" component="h5">{book.title}</Typography>
+                    <Typography variant="body2" component="p">By {book.author}</Typography>
                   </Box>
                 </Grid>
               </Grid>
             </Grid>
             <Grid size={{xs: 12, md: 5}}>
-              <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', p: 4, gap: 2 }}>
+              <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button startIcon={<PlayIcon />} variant="contained">Play</Button>
-                <Button startIcon={<ListIcon />} variant="outlined" color="secondary">Chapters</Button>
+                <ChaptersButton title={book.title} />
+                {/* <Button startIcon={<ListIcon />} variant="outlined" color="secondary">Chapters</Button> */}
               </Box>
             </Grid>
           </Grid>
-          
-          
-          {/* <Box sx={{ display: 'flex', flex: 1, bgcolor: 'green' }}>Book cover</Box>
-          <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', p: 4, gap: 2 }}>
-            <Button startIcon={<PlayIcon />} variant="contained">Play</Button>
-            <Button startIcon={<PlayIcon />} variant="contained">Play</Button>
-          </Box> */}
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <Typography variant="h4" component="h4">Summary</Typography>
@@ -76,12 +125,20 @@ export default function BookPage() {
             This story is a celebration of the extraordinary found in the ordinary, reminding readers of the beauty of kindness and the importance of standing up for those we care about.
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', p: 2, }}>
-          <Chip label="Friendship" />
-          <Chip label="Animal Stories" />
-          <Chip label="Classic Children's Literature" />
-          <Chip label="Farm Life" />
-          <Chip label="Selflessness and Sacrifice" />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '100%',
+            p: 2,
+            overflowX: 'scroll',
+            overflow: 'hidden',
+            gap: 1,
+          }}>
+          {labels.map((label, idx) => (
+            <Chip label={label} key={idx}></Chip>
+          ))}
         </Box>
         <Box sx={{ p: 2 }}>
           <BookCarousel slidesToShow={3} />

@@ -4,6 +4,52 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+
+
+export const BOOKS: {title: string, author: string}[] = [
+  {
+    title: "The Boxcar Children",
+    author: "Gertrude Chandler Warner"
+  },
+  {
+    title: "Magic Tree House: Dinosaurs Before Dark",
+    author: "Mary Pope Osborne"
+  },
+  {
+    title: "The Adventures of Tom Sawyer",
+    author: "Mark Twain"
+  },
+  {
+    title: "Charlotte's Web",
+    author: "E.B. White"
+  },
+  {
+    title: "Anne of Green Gables",
+    author: "L.M. Montgomery"
+  },
+  {
+    title: "Little House on the Prairie",
+    author: "Laura Ingalls Wilder"
+  },
+  {
+    title: "Harry Potter and the Sorcerer's Stone",
+    author: "J.K. Rowling"
+  },
+  {
+    title: "The Chronicles of Narnia: The Lion, the Witch, and the Wardrobe",
+    author: "C.S. Lewis"
+  },
+  {
+    title: "Percy Jackson & the Olympians: The Lightning Thief",
+    author: "Rick Riordan"
+  },
+  {
+    title: "The Secret Garden",
+    author: "Frances Hodgson Burnett"
+  }
+];
+
+
 export interface IBookCarousel {
   dots?: boolean;
   infinite?: boolean;
@@ -31,49 +77,6 @@ export default function BookCarousel({...props}: IBookCarousel) {
     // slidesToScroll: 1,
   };
 
-  var items = [
-    {
-      "title": "The Boxcar Children",
-      "author": "Gertrude Chandler Warner"
-    },
-    {
-      "title": "Magic Tree House: Dinosaurs Before Dark",
-      "author": "Mary Pope Osborne"
-    },
-    {
-      "title": "The Adventures of Tom Sawyer",
-      "author": "Mark Twain"
-    },
-    {
-      "title": "Charlotte's Web",
-      "author": "E.B. White"
-    },
-    {
-      "title": "Anne of Green Gables",
-      "author": "L.M. Montgomery"
-    },
-    {
-      "title": "Little House on the Prairie",
-      "author": "Laura Ingalls Wilder"
-    },
-    {
-      "title": "Harry Potter and the Sorcerer's Stone",
-      "author": "J.K. Rowling"
-    },
-    {
-      "title": "The Chronicles of Narnia: The Lion, the Witch, and the Wardrobe",
-      "author": "C.S. Lewis"
-    },
-    {
-      "title": "Percy Jackson & the Olympians: The Lightning Thief",
-      "author": "Rick Riordan"
-    },
-    {
-      "title": "The Secret Garden",
-      "author": "Frances Hodgson Burnett"
-    }
-  ];
-
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', }}>
@@ -90,10 +93,10 @@ export default function BookCarousel({...props}: IBookCarousel) {
       }}>
           <Box sx={{ width: '100%' }}>
             <Slider {...settings}>
-              {items.map((item, idx) => (
+            {BOOKS.map((item, idx) => (
                 <Box component="div" sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', }} key={idx}>
                   <ButtonBase
-                    href="/book"
+                    href={"/book/" + idx}
                     sx={{
                       display: 'flex',
                       flexDirection: 'column',
