@@ -5,7 +5,11 @@ import { Message } from "@/components/form-message";
 import { Box, Button, Card, CardActions, TextField, Typography } from "@mui/material";
 import { Metadata } from "next";
 import Link from "next/link";
-import { MouseEventHandler, useState } from "react";
+import { MouseEvent, MouseEventHandler, useState } from "react";
+
+export const metadata: Metadata = {
+  title: 'Sign In'
+};
 
 export default function SignInForm({message}: {message?: Message}) {
   const [formData, setFormData] = useState({
@@ -14,7 +18,7 @@ export default function SignInForm({message}: {message?: Message}) {
   });
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleClick = async (e: MouseEventHandler<HTMLButtonElement>) => {
+  const handleClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     try {
