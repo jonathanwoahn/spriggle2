@@ -49,9 +49,9 @@ const BOOKS: { title: string, author: string }[] = [
   }
 ];
 
-export default async function BookPage({params}: {params: {id: number | string}}) {
+export default async function BookPage({params}: {params: {id: string}}) {
   const {id} = await params;
-  const book = BOOKS[id as number];
+  const book = BOOKS[parseInt(id)];
   
   const labels = [
     "Friendship",
