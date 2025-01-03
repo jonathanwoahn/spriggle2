@@ -14,6 +14,8 @@ export default async function Home() {
           flexDirection: 'column',
           alignItems: 'center',
           pb: '108px',
+          pl: 2,
+          pr: 2,
         }}>
         <BookCarousel />
         <BookCarousel />
