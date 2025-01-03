@@ -10,7 +10,7 @@ export default function BookCarousel() {
     infinite: true,
     speed: 500,
     slidesToShow: 6,
-    slidesToScroll: 6,
+    slidesToScroll: 1,
   };
 
   var items = [

@@ -69,7 +69,7 @@ export default function SignUpForm({message}: {message?: Message}) {
 
           </CardActions>
           <Typography variant="body2" color="error">
-            {message?.error}
+            {message && 'error' in message ? message.error : ''}
           </Typography>
 
         </Card>
