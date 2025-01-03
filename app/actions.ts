@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
+
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
 
@@ -132,3 +133,28 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+
+export interface ISettings {
+  id?: number;
+  data: {
+    cashmereApiKey: string;
+    openaiApiKey: string;
+  };
+}
+
+export const saveSettings = async (settings: ISettings) => {
+  const supabase = await createClient();
+
+  const user = await supabase.auth.getUser();
+  console.log('USER: ', user);
+  
+
+  const { data, error } = await supabase.from("settings").upsert(settings);
+
+  if(error) {
+    console.error(error);
+  }
+  
+  // console.log(data);
+}
+

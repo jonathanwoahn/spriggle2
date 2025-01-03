@@ -5,14 +5,14 @@ import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
 
 const SignInButtons = () => (
-  <>
-    <Button color="primary" variant="contained">
-      <Link href="/sign-up">Sign Up</Link>
+  <Box sx={{display: 'flex', flexDirection: 'row', gap: 2}}>
+    <Button color="primary" variant="contained" href="/sign-up">
+      Sign Up
     </Button>
-    <Button color="secondary">
-      <Link href="/sign-in">Sign In</Link>
+    <Button color="secondary" href="/sign-in">
+      Sign In
     </Button>
-  </>
+  </Box>
 );
 
 export default async function TopNav() {
@@ -23,19 +23,17 @@ export default async function TopNav() {
   } = await supabase.auth.getUser();
 
   return (
-    <AppBar position="static" color="transparent" sx={{zIndex: 10000}}>
+    <AppBar position="static" sx={{zIndex: 10000}}>
       <Toolbar sx={{alignItems: 'center', justifyContent: 'space-between'}}>
         <Box>
-          <Button color="info" startIcon={<HomeIcon />}>
-            <Link href="/">
+          <Button color="info" startIcon={<HomeIcon />} href="/">
               Spriggle
-            </Link>
           </Button>
         </Box>
         <Box sx={{display: 'flex', gap: 2 }}>
-          <IconButton>
+          {/* <IconButton>
             <HomeIcon />
-          </IconButton>
+          </IconButton> */}
           <Box>
             {user ? <SignOutButton /> : <SignInButtons />}
           </Box>

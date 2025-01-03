@@ -1,48 +1,63 @@
-import { Box } from "@mui/material";
+import { Box, Button, Grid2 as Grid, Typography } from "@mui/material";
 import NextLogo from "./next-logo";
 import SupabaseLogo from "./supabase-logo";
+import Image from "next/image";
 
 export default function Hero() {
   return (
-    // <div className="flex flex-col gap-16 items-center">
-    //   <div className="flex gap-8 justify-center items-center">
-    //     <a
-    //       href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-    //       target="_blank"
-    //       rel="noreferrer"
-    //     >
-    //       <SupabaseLogo />
-    //     </a>
-    //     <span className="border-l rotate-45 h-6" />
-    //     <a href="https://nextjs.org/" target="_blank" rel="noreferrer">
-    //       <NextLogo />
-    //     </a>
-    //   </div>
-    //   <h1 className="sr-only">Supabase and Next.js Starter Template</h1>
-    //   <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
-    //     The fastest way to build apps with{" "}
-    //     <a
-    //       href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-    //       target="_blank"
-    //       className="font-bold hover:underline"
-    //       rel="noreferrer"
-    //     >
-    //       Supabase
-    //     </a>{" "}
-    //     and{" "}
-    //     <a
-    //       href="https://nextjs.org/"
-    //       target="_blank"
-    //       className="font-bold hover:underline"
-    //       rel="noreferrer"
-    //     >
-    //       Next.js
-    //     </a>
-    //   </p>
-    //   <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-8" />
-    // </div>
-    <Box>
-      hero content and CTA
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      width: '100%',
+      pt: 8,
+      pb: 8,
+    }}>
+      <Grid container spacing={8} sx={{width: '100%'}}>
+        <Grid
+          size={{xs: 12, md: 6}}
+          sx={{order: {xs: 2, md: 1}}}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            justifyContent: 'center',
+            height: {md: '50vh'},
+          }}>
+            <Box sx={{display: 'flex', gap: 4, flexDirection: 'column'}}>
+              <Box sx={{display: 'flex', flexDirection: 'column', }}>
+                <Typography variant="h1" component="h1" sx={{textAlign: {xs: 'center', md: 'right',}}}>
+                  Headline
+                </Typography>
+                <Typography variant="body1" component="p" sx={{ textAlign: { xs: 'center', md: 'right' } } }>
+                  Body text below the headline
+                </Typography>
+              </Box>
+              <Box sx={{display: 'flex', justifyContent: 'center', }}>
+                <Button variant="contained" size="large" href="/sign-up">
+                  Sign Up
+                </Button>
+              </Box>
+              </Box>
+          </Box>
+
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 2 } }}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            bgcolor: 'purple',
+            height: { xs: '40vh', md: '50vh' },
+            position: 'relative',
+          }}>
+            <Image priority={true} src="https://picsum.photos/600/400" alt="" objectFit="cover" fill={true} sizes="100vh" />
+          </Box>
+        </Grid>
+      </Grid>
+
     </Box>
+    
   );
 }

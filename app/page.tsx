@@ -1,19 +1,25 @@
+import BookCarousel from "@/components/book-carousel";
+import Footer from "@/components/footer";
 import Hero from "@/components/hero";
-import ConnectSupabaseSteps from "@/components/tutorial/connect-supabase-steps";
-import SignUpUserSteps from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
+import { Box } from "@mui/material";
 
 export default async function Home() {
   return (
-    <>
+    <Box>
       <Hero />
-      {/* <main className="flex-1 flex flex-col gap-6 px-4">
-        <h2 className="font-medium text-xl mb-4">Next steps</h2>
-        {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-      </main> */}
-      <main>
-        insert book cards here
-      </main>
-    </>
+      <Box
+        component="main"
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          pb: '108px',
+        }}>
+        <BookCarousel />
+        <BookCarousel />
+        <BookCarousel />
+      </Box>
+      <Footer />
+    </Box>
   );
 }
