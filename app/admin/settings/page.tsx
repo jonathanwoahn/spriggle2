@@ -1,14 +1,10 @@
 'use client';
+
 import { ISettings, saveSettings } from "@/app/actions";
 import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
-import { Metadata } from "next";
 import { useState } from "react";
 
-// export const metadata: Metadata = {
-//   title: 'Sign Up'
-// };
-
-export default function SettingsPage({defaultSettings}: {defaultSettings: ISettings}) {
+export default function SettingsPage() {
   const [ isValid, setIsValid ] = useState<boolean>(false);
   const [ isDirty, setIsDirty ] = useState<boolean>(false);
   const [ form, setForm ] = useState<ISettings>({
