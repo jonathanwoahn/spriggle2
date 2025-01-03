@@ -91,7 +91,7 @@ export default function SignInForm({message}: {message?: Message}) {
             </Button>
           </CardActions>
           <Typography variant="body2" color="error">
-            {message?.error}
+            {message && 'error' in message ? message.error : ''}
           </Typography>
         </Card>
 
