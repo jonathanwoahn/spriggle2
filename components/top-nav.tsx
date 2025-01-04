@@ -3,6 +3,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import TopNavMenuButton from "./top-nav-menu-button";
 
 const SignInButtons = () => (
   <Box sx={{display: 'flex', flexDirection: 'row', gap: 2}}>
@@ -25,15 +27,16 @@ export default async function TopNav() {
   return (
     <AppBar position="sticky">
       <Toolbar sx={{alignItems: 'center', justifyContent: 'space-between'}}>
-        <Box>
+        <Box sx={{display: 'flex', gap: 2}}>
           <Button color="info" startIcon={<HomeIcon />} href="/">
               Spriggle
           </Button>
+          <TopNavMenuButton />
         </Box>
         <Box sx={{display: 'flex', gap: 2 }}>
-          {/* <IconButton>
-            <HomeIcon />
-          </IconButton> */}
+          <IconButton href="/admin">
+            <AdminPanelSettingsIcon />
+          </IconButton>
           <Box>
             {user ? <SignOutButton /> : <SignInButtons />}
           </Box>
