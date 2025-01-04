@@ -1,25 +1,20 @@
 // 'use client';
 
-import { Box, Button, Card, CardActionArea, CardActions, CardContent, CardHeader, IconButton, Slider, Typography } from "@mui/material";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-// import ListIcon from '@mui/icons-material/List';
-// import SpeedIcon from '@mui/icons-material/Speed';
-import ChapterDrawer from "../chapter-drawer";
-import { useState } from "react";
-
-import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Replay30Icon from '@mui/icons-material/Replay30';
-import Forward30Icon from '@mui/icons-material/Forward30';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayerCardActions from "./player-card-actions";
-import PlayerProgress from "./player-progress";
-import PlayerControls from "./player-controls";
+import { Box } from "@mui/material";
 import MediaPlayer from "./media-player";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function PlayBookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+    const supabase = await createClient();
+  
+    const { data: { user }, } = await supabase.auth.getUser();
+  
+    if (!user) {
+      return redirect("/sign-in?message=You need to sign in to access this page");
+    }
   
   return (
     <Box sx={{p: 2, pt: 4, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto',}}>
