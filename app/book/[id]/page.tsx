@@ -12,10 +12,15 @@ import { IBookData } from "./play/media-player";
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
 
-  const url = `http://localhost:3000/api/book/${id}`;
+  const defaultUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  console.log(defaultUrl);
+
+  const url = `${defaultUrl}/api/book/${id}`;
   const response = await fetch(url);
   const bookData: IBookData = await response.json();
-  console.log(bookData);
   
   if (!bookData) {
     return <div>Book not found</div>;
