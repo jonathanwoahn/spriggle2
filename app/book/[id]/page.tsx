@@ -4,55 +4,23 @@ import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
+import { BOOKS } from "@/utils/constants";
+import Image from "next/image";
+import { IBookData } from "./play/media-player";
 
-
-const BOOKS: { title: string, author: string }[] = [
-  {
-    title: "The Boxcar Children",
-    author: "Gertrude Chandler Warner"
-  },
-  {
-    title: "Magic Tree House: Dinosaurs Before Dark",
-    author: "Mary Pope Osborne"
-  },
-  {
-    title: "The Adventures of Tom Sawyer",
-    author: "Mark Twain"
-  },
-  {
-    title: "Charlotte's Web",
-    author: "E.B. White"
-  },
-  {
-    title: "Anne of Green Gables",
-    author: "L.M. Montgomery"
-  },
-  {
-    title: "Little House on the Prairie",
-    author: "Laura Ingalls Wilder"
-  },
-  {
-    title: "Harry Potter and the Sorcerer's Stone",
-    author: "J.K. Rowling"
-  },
-  {
-    title: "The Chronicles of Narnia: The Lion, the Witch, and the Wardrobe",
-    author: "C.S. Lewis"
-  },
-  {
-    title: "Percy Jackson & the Olympians: The Lightning Thief",
-    author: "Rick Riordan"
-  },
-  {
-    title: "The Secret Garden",
-    author: "Frances Hodgson Burnett"
-  }
-];
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
-  const book = BOOKS[parseInt(id)];
+
+  const url = `http://localhost:3000/api/book/${id}`;
+  const response = await fetch(url);
+  const bookData: IBookData = await response.json();
+  console.log(bookData);
   
+  if (!bookData) {
+    return <div>Book not found</div>;
+  }  
+
   const labels = [
     "Friendship",
     "Animal Stories",
@@ -70,13 +38,17 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
               <Grid container>
                 <Grid size={{xs: 12, md: 5}}>
                   <Box sx={{display: 'flex', justifyContent: 'center', }}>
-                    <Box sx={{ height: '300px', width: '240px', bgcolor: 'gray', }}></Box>
+                    <Box sx={{borderRadius: 2, overflow: 'hidden'}}>
+                      <Image src={`/api/book/${bookData.uuid}/cover`} alt={bookData.data.title} height={300} width={225} />
+                    </Box>
                   </Box>
                 </Grid>
                 <Grid size={{xs: 12, md: 7}}>
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
-                    <Typography variant="h5" component="h5">{book.title}</Typography>
-                    <Typography variant="body2" component="p">By {book.author}</Typography>
+                    <Typography variant="h5" component="h5">{bookData.data.title}</Typography>
+                    <Typography variant="body2" component="p">By {bookData.data.creators.join(', ')}</Typography>
+                    <Typography variant="body2" component="p">Length of audiobook</Typography>
+
                   </Box>
                 </Grid>
               </Grid>
@@ -84,7 +56,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             <Grid size={{xs: 12, md: 5}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play`}>Play</Button>
-                <ChaptersButton title={book.title} />
+                <ChaptersButton bookData={bookData} />
               </Box>
             </Grid>
           </Grid>

@@ -5,10 +5,11 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import { Button, CardActions } from '@mui/material';
 import { useState } from 'react';
 import ChapterDrawer from '../chapter-drawer';
+import { IBookData } from './media-player';
 
 
 
-export default function PlayerCardActions() {
+export default function PlayerCardActions({bookData}: {bookData: IBookData}) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -19,7 +20,12 @@ export default function PlayerCardActions() {
       <Button onClick={() => setIsOpen(true)} startIcon={<ListIcon />}>
         Chapters
       </Button>
-      <ChapterDrawer isOpen={isOpen} setIsOpen={setIsOpen} title="Chapters" />
+      <ChapterDrawer
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        title={bookData.data.title}
+        navItems={bookData.data.nav} 
+      />
     </CardActions>
   );
 }

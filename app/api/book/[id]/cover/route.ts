@@ -13,6 +13,7 @@ export const GET = async (
   
   const cash = new Cashmere(cashmereAPIKey);
   const url = await cash.getBookCoverURL(id);
+
   // Fetch the actual image binary data
   const response = await fetch(url);
   if (!response.ok) {
