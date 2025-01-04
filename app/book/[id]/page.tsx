@@ -1,4 +1,4 @@
-import BookCarousel from "@/components/book-carousel";
+import BookCarousel, { IBookCarousel } from "@/components/book-carousel";
 import { AppBar, Box, Button, Chip, Drawer, IconButton, List, ListItem, ListItemButton, ListItemText, Toolbar, Typography } from "@mui/material";
 import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer";
@@ -16,8 +16,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000";
 
-  console.log(defaultUrl);
-
   const url = `${defaultUrl}/api/book/${id}`;
   const response = await fetch(url);
   const bookData: IBookData = await response.json();
@@ -33,6 +31,25 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     "Farm Life",
     "Selflessness and Sacrifice",
   ];
+
+  const carouselSettings: Partial<IBookCarousel> = {
+    slidesToShow: 3,
+    responsive: [
+      {
+        breakpoint: 550,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 750,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+    ],
+  };
+  
   
   return (
     <>
@@ -117,7 +134,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           ))}
         </Box>
         <Box sx={{ p: 2 }}>
-          <BookCarousel slidesToShow={2} />
+          <BookCarousel {...carouselSettings} />
 
         </Box>
       </Box>

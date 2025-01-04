@@ -34,9 +34,7 @@ export default async function TopNav() {
           <TopNavMenuButton />
         </Box>
         <Box sx={{display: 'flex', gap: 2 }}>
-          <IconButton href="/admin">
-            <AdminPanelSettingsIcon />
-          </IconButton>
+          {user ? <IconButton href="/admin"> <AdminPanelSettingsIcon /> </IconButton> : null}
           <Box>
             {user ? <SignOutButton /> : <SignInButtons />}
           </Box>
