@@ -17,24 +17,8 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
     }
   
   return (
-    <Box sx={{p: 2, pt: 4, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto',}}>
+    <Box sx={{p: 2, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto',}}>
       <MediaPlayer id={id} />
-      {/* <Card>
-        <CardActionArea href={`/book/${id}`}>
-          <CardHeader 
-            subheader="Harry Potter and the Sorcerer's Stone"
-          />
-
-        </CardActionArea>
-        <CardContent>
-          <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-            <Box sx={{height: '300px', width: '240px', bgcolor: 'gray', borderRadius: 2, }}></Box>
-          </Box>
-          <PlayerProgress />
-          <PlayerControls />
-        </CardContent>
-        <PlayerCardActions />
-      </Card> */}
     </Box>
   );
 }

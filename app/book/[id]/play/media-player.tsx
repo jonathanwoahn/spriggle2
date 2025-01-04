@@ -8,6 +8,7 @@ import { useState } from "react";
 
 export default function MediaPlayer({id}: {id: string}) {
   const duration = 200;
+  const totalLength = 5000;
   const [position, setPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   
@@ -15,13 +16,12 @@ export default function MediaPlayer({id}: {id: string}) {
    <Card>
      <CardActionArea href={`/book/${id}`}>
        <CardHeader subheader="Harry Potter and the Sorcerer's Stone" />
-
      </CardActionArea>
      <CardContent>
        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-         <Box sx={{ height: '300px', width: '240px', bgcolor: 'gray', borderRadius: 2, }}></Box>
+         <Box sx={{ height: '240px', width: '180px', bgcolor: 'gray', borderRadius: 2, }}></Box>
        </Box>
-       <PlayerProgress position={position} setPosition={setPosition} duration={duration} />
+       <PlayerProgress position={position} setPosition={setPosition} duration={duration} totalLength={totalLength} />
        <PlayerControls isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
      </CardContent>
      <PlayerCardActions />

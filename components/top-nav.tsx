@@ -23,7 +23,7 @@ export default async function TopNav() {
   } = await supabase.auth.getUser();
 
   return (
-    <AppBar position="static" sx={{zIndex: 10000}}>
+    <AppBar position="sticky">
       <Toolbar sx={{alignItems: 'center', justifyContent: 'space-between'}}>
         <Box>
           <Button color="info" startIcon={<HomeIcon />} href="/">

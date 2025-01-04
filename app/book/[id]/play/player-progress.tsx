@@ -2,7 +2,7 @@
 import { Box, Slider, Typography } from "@mui/material";
 import { useState } from "react";
 
-export default function PlayerProgress({position, setPosition, duration}: {position: number, setPosition: (position: number) => void, duration: number}) {
+export default function PlayerProgress({ position, setPosition, duration, totalLength }: { position: number, setPosition: (position: number) => void, duration: number, totalLength: number}) {
   
 
   function formatDuration(value: number) {
@@ -11,7 +11,18 @@ export default function PlayerProgress({position, setPosition, duration}: {posit
     return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
   }
   
-  
+  function formatDuration2(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const parts: string[] = [];
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+
+    return parts.join(' ');
+  }
   
   
   return (
@@ -43,8 +54,8 @@ export default function PlayerProgress({position, setPosition, duration}: {posit
               }),
             },
             '&.Mui-active': {
-              width: 20,
-              height: 20,
+              width: 25,
+              height: 25,
             },
           },
           '& .MuiSlider-rail': {
@@ -59,7 +70,7 @@ export default function PlayerProgress({position, setPosition, duration}: {posit
         {/* how far listened in current chapter */}
         <Typography variant="caption" component="p">{formatDuration(position)}</Typography>
         {/* total amount of time remaining in the audiobook */}
-        <Typography variant="caption" component="p">11m 23s left</Typography>
+        <Typography variant="caption" component="p">{formatDuration2(totalLength - position)} left</Typography>
         {/* total amount of time left in this chapter */}
         <Typography variant="caption" component="p">-{formatDuration(duration - position)}</Typography>
       </Box>

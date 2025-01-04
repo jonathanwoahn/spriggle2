@@ -23,7 +23,7 @@ export default function ChapterDrawer({isOpen, setIsOpen, title}: {isOpen: boole
       </AppBar>
 
       <List>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((chapter, idx) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map((chapter, idx) => (
           <ListItemButton key={idx} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', }}>
             <Typography variant={"body1"}>{chapter}. Content</Typography>
             <Typography variant={"body2"}>01:23</Typography>

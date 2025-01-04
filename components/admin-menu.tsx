@@ -20,6 +20,11 @@ export default function AdminMenu() {
       url: '/admin/collections',
     },
     {
+      label: 'Tags',
+      icon: <CollectionsIcon />,
+      url: '/admin/collections',
+    },
+    {
       label: 'Settings',
       icon: <SettingsIcon />,
       url: '/admin/settings',

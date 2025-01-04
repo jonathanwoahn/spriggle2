@@ -74,7 +74,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                   </Box>
                 </Grid>
                 <Grid size={{xs: 12, md: 7}}>
-                  <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2},}}>
+                  <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
                     <Typography variant="h5" component="h5">{book.title}</Typography>
                     <Typography variant="body2" component="p">By {book.author}</Typography>
                   </Box>
@@ -140,7 +140,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           ))}
         </Box>
         <Box sx={{ p: 2 }}>
-          <BookCarousel slidesToShow={3} />
+          <BookCarousel slidesToShow={2} />
 
         </Box>
       </Box>
