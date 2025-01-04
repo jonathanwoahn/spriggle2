@@ -83,9 +83,8 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             </Grid>
             <Grid size={{xs: 12, md: 5}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
-                <Button startIcon={<PlayIcon />} variant="contained">Play</Button>
+                <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play`}>Play</Button>
                 <ChaptersButton title={book.title} />
-                {/* <Button startIcon={<ListIcon />} variant="outlined" color="secondary">Chapters</Button> */}
               </Box>
             </Grid>
           </Grid>
