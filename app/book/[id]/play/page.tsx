@@ -14,11 +14,14 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
   }
   
   const { id } = await params;
-  const url = `http://localhost:3000/api/book/${id}`;
-  const response = await fetch(url);
-  const bookData = await response.json();
+  const defaultUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
   
+  const url = `${defaultUrl}/api/book/${id}`;
+  const response = await fetch(url);
+  const bookData = await response.json();
 
   return (
     <Box sx={{p: 2, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto',}}>
