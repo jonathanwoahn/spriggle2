@@ -64,7 +64,6 @@ export default function SettingsForm({settings}: {settings: ISetting[]}) {
   const handleCancel = () =>{
     setForm(settings);
     setIsDirty(false);
-
   }
 
   

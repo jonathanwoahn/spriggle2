@@ -31,6 +31,10 @@ export const PUT = async (request: NextRequest) => {
     return NextResponse.json(data);
   }catch(e) {
     console.log('ERROR: ', e);
-    return NextResponse.json({error: e.message});
+    if (e instanceof Error) {
+      return NextResponse.json({error: e.message});
+    } else {
+      return NextResponse.json({error: e});
+    }
   }
 }
