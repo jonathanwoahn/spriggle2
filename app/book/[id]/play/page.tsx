@@ -1,16 +1,20 @@
-// 'use client';
-
 import { Box } from "@mui/material";
 import MediaPlayer from "./media-player";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 export default async function PlayBookPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const { data: { user }, } = await supabase.auth.getUser();
+
+
+  const headersList = headers();
+  const fullUrl = (await headersList).get('referer') || "";
+  console.log(fullUrl);
   
   if (!user) {
-    return redirect("/sign-in?message=You need to sign in to access this page");
+    return redirect(`/sign-in?message=You need to sign in to access this page&redirect_to=${fullUrl}`);
   }
   
   const { id } = await params;

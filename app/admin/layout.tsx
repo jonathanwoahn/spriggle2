@@ -1,7 +1,7 @@
 import AdminMenu from "@/components/admin-menu";
 import { createClient } from "@/utils/supabase/server";
 import { Box } from "@mui/material";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 
 export default async function Layout({
@@ -14,7 +14,7 @@ export default async function Layout({
   const { data: { user }, } = await supabase.auth.getUser();
 
   if (!user || user.email !== "jonathanwoahn@gmail.com") {
-    return redirect("/");
+    return notFound();
   }
   
   return (

@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export const signUpAction = async (formData: FormData) => {
+export const signUpAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
 
@@ -24,7 +24,7 @@ export const signUpAction = async (formData: FormData) => {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: redirect_to ? `${origin}/auth/callback?redirect_to=${redirect_to}` : `${origin}/auth/callback`,
     },
   });
 
@@ -40,7 +40,7 @@ export const signUpAction = async (formData: FormData) => {
   }
 };
 
-export const signInAction = async (formData: FormData) => {
+export const signInAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createClient();
@@ -51,10 +51,10 @@ export const signInAction = async (formData: FormData) => {
   });
 
   if (error) {
-    return encodedRedirect("error", "/sign-in", error.message);
+    return encodedRedirect("error", `/sign-in&redirect_to=${redirect_to}`, error.message);
   }
 
-  return redirect("/protected");
+  return redirect_to ? redirect(redirect_to) : redirect('/');
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -131,7 +131,7 @@ export const resetPasswordAction = async (formData: FormData) => {
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return redirect("/sign-in");
+  return redirect("/");
 };
 
 export interface ISetting {
