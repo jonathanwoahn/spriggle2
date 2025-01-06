@@ -25,6 +25,7 @@
 - [ ] update "reset password" page to use MUI components
 - [ ] add social sign in (i.e. Google Auth)
 - [ ] modify hero section to change once a user is logged in
+- [ ] clean up all unused code
 
 
 
