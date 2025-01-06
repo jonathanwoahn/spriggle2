@@ -134,27 +134,29 @@ export const signOutAction = async () => {
   return redirect("/sign-in");
 };
 
-export interface ISettings {
-  id?: number;
-  data: {
-    cashmereApiKey: string;
-    openaiApiKey: string;
-  };
+export interface ISetting {
+  description: string;
+  field: string;
+  id: number;
+  key: string;
+  type: 'string' | 'boolean';
+  value: string;
+  order: number;
 }
 
-export const saveSettings = async (settings: ISettings) => {
-  const supabase = await createClient();
 
-  const user = await supabase.auth.getUser();
-  console.log('USER: ', user);
-  
+export const saveSettings = async (settings: ISetting[]) => {
+  const defaultUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
-  const { data, error } = await supabase.from("settings").upsert(settings);
 
-  if(error) {
-    console.error(error);
-  }
-  
-  // console.log(data);
+  await fetch(`${defaultUrl}/api/settings`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(settings),
+  })
 }
 

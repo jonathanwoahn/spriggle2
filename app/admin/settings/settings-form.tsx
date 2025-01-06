@@ -1,17 +1,8 @@
 'use client';
 
+import { ISetting, saveSettings } from "@/app/actions";
 import { Box, Button, Card, CardActions, TextField } from "@mui/material";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
-
-export interface ISetting {
-  description: string;
-  field: string;
-  id: number;
-  key: string;
-  type: 'string' | 'boolean';
-  value: string;
-  order: number;
-}
 
 const InputTextField = ({ setting, handleInputChange }: { setting: ISetting, handleInputChange: (val: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void}) => {
   return (
@@ -50,13 +41,7 @@ export default function SettingsForm({settings}: {settings: ISetting[]}) {
   }
 
   const handleSave = async () => {
-    await fetch('http://localhost:3000/api/settings', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form),
-    })
+    await saveSettings(form);
 
     setIsDirty(false);
   }
@@ -65,8 +50,6 @@ export default function SettingsForm({settings}: {settings: ISetting[]}) {
     setForm(settings);
     setIsDirty(false);
   }
-
-  
   
   return (
     <Box component="form">

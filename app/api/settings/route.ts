@@ -18,9 +18,6 @@ export const PUT = async (request: NextRequest) => {
   
   try {
     const body = await request.json();
-
-    console.log(body);
-    
     const { data, error } = await supabase.from('app_settings').upsert(body, {onConflict: 'id'});
 
     if (error) {

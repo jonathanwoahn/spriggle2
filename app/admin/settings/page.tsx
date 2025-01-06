@@ -4,7 +4,12 @@ import { useState } from "react";
 import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
-  const response = await fetch('http://localhost:3000/api/settings');
+  const defaultUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+
+  const response = await fetch(`${defaultUrl}/api/settings`);
   if(!response.ok) {
     throw new Error('missing');
   }
