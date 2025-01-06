@@ -8,9 +8,11 @@ export const GET = async (
 ) => {
   const { id } = await params;
 
-  const cashmereAPIKey = `02173768f55c783324baaefd5afd11b73c74804688f45f321f1f73eae1a6881b`;
-  
-  const cash = new Cashmere(cashmereAPIKey);
+  // TODO:  need to update this to dynamically get the route of the vercel API url
+  const response = await fetch('http://localhost:3000/api/settings/cashmereApiKey');
+  const { value } = await response.json();
+
+  const cash = new Cashmere(value);
   const book = await cash.getBook(id);
   
   return NextResponse.json(book);

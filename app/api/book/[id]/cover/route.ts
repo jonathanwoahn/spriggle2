@@ -8,10 +8,12 @@ export const GET = async (
 ) => {
   const { id } = await params;
   
-  // need to grab this from the supabase server, and cache it locally
-  const cashmereAPIKey = `02173768f55c783324baaefd5afd11b73c74804688f45f321f1f73eae1a6881b`;
+  // TODO:  need to update this to dynamically get the route of the vercel API url
+  const keyResponse = await fetch('http://localhost:3000/api/settings/cashmereApiKey');
+  const { value } = await keyResponse.json();
+
   
-  const cash = new Cashmere(cashmereAPIKey);
+  const cash = new Cashmere(value);
   const url = await cash.getBookCoverURL(id);
 
   // Fetch the actual image binary data

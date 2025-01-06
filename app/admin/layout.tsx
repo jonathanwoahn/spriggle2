@@ -13,8 +13,8 @@ export default async function Layout({
 
   const { data: { user }, } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect("/sign-in");
+  if (!user || user.email !== "jonathanwoahn@gmail.com") {
+    return redirect("/");
   }
   
   return (
