@@ -1,6 +1,4 @@
-import { ISettings, saveSettings } from "@/app/actions";
-import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography } from "@mui/material";
 import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
