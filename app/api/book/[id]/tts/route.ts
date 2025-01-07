@@ -16,12 +16,12 @@ interface IBlockJobs {
 }
 
 
-const processBlock = (block, blocks) => {
+const processBlock = (block: any, blocks: any[]) => {
   const { children, ...blockData } = block;
   blocks.push(blockData);
 
   if (children) {
-    children.forEach(child => processBlock(child, blocks));
+    children.forEach((child: any) => processBlock(child, blocks));
   }
 
   return blocks;
