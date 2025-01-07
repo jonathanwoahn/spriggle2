@@ -1,12 +1,12 @@
 import BookCarousel, { IBookCarousel } from "@/components/book-carousel";
-import { AppBar, Box, Button, Chip, Drawer, IconButton, List, ListItem, ListItemButton, ListItemText, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Chip, Typography } from "@mui/material";
 import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
-import { BOOKS } from "@/utils/constants";
 import Image from "next/image";
 import { IBookData } from "./play/media-player";
+import GenerateAudioButton from "./generate-audio-button";
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -79,6 +79,9 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play`}>Play</Button>
                 <ChaptersButton bookData={bookData} />
+                {/* this is a temporary button. remove once this can be run from the admin page */}
+                <GenerateAudioButton id={id} />
+                
               </Box>
             </Grid>
           </Grid>

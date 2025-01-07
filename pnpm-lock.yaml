@@ -62,6 +62,9 @@ dependencies:
   node-cache:
     specifier: ^5.1.2
     version: 5.1.2
+  omnibook:
+    specifier: github:bookclub-com/omnibook.js
+    version: github.com/bookclub-com/omnibook.js/5e2d8ffef1212df6e2649ee7ce7c23542e12237b
   prettier:
     specifier: ^3.3.3
     version: 3.4.2
@@ -2496,6 +2499,10 @@ packages:
       queue-microtask: 1.2.3
     dev: true
 
+  /sax@1.4.1:
+    resolution: {integrity: sha512-+aWOz7yVScEGoKNd4PA10LZ8sk0A/z5+nXQG5giUO5rprX9jgYsTdov9qCchZiPIZezbZH+jRut8nPodFAX4Jg==}
+    dev: false
+
   /scheduler@0.25.0:
     resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
     dev: false
@@ -2841,6 +2848,13 @@ packages:
         optional: true
     dev: false
 
+  /xml-js@1.6.11:
+    resolution: {integrity: sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==}
+    hasBin: true
+    dependencies:
+      sax: 1.4.1
+    dev: false
+
   /yaml@1.10.2:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
@@ -2851,3 +2865,13 @@ packages:
     engines: {node: '>= 14'}
     hasBin: true
     dev: true
+
+  github.com/bookclub-com/omnibook.js/5e2d8ffef1212df6e2649ee7ce7c23542e12237b:
+    resolution: {tarball: https://codeload.github.com/bookclub-com/omnibook.js/tar.gz/5e2d8ffef1212df6e2649ee7ce7c23542e12237b}
+    name: omnibook
+    version: 0.0.6
+    prepare: true
+    requiresBuild: true
+    dependencies:
+      xml-js: 1.6.11
+    dev: false

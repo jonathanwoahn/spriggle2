@@ -150,3 +150,32 @@ insert into public.app_settings (field, type, value, description, key, order)
 values
   ('Cashmere API Key', 'string', '', 'API Key for Cashmere', 'cashmereApiKey', 0),
   ('OpenAI API Key', 'string', '', 'API Key for OpenAI', 'openAiApiKey', 1);
+
+
+
+-- GENERATE JOBS TABLES
+-- need to generate a table to track jobs. it should include the following fields: id (int), created_at (timestamp), updated_at (timestamp), status (enum: 'pending', 'processing', 'completed', 'failed'), type: (enum: 'block', 'section', 'omnibook'), data (jsonb), log (jsonb array), 
+
+
+-- only drop the job_status if the type already exists
+DROP TYPE IF EXISTS public.job_status;
+CREATE TYPE public.job_status as enum ('pending', 'processing', 'completed', 'failed');
+
+DROP TYPE IF EXISTS public.job_type;
+CREATE TYPE public.job_type as enum ('text', 'section', 'omnibook');
+
+CREATE TABLE public.jobs (
+  id serial primary key,
+  status job_status not null,
+  type job_type not null,
+  data jsonb not null,
+  log jsonb[] not null,
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now()
+);
+
+-- Create a unique index on the bookBlockId and omnibookId properties within the data JSONB column
+create unique index unique_book_block_omnibook on public.jobs (
+  (data->>'bookBlockId'),
+  (data->>'omnibookId')
+);
