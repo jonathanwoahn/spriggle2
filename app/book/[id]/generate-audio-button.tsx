@@ -4,17 +4,11 @@ import { Button } from "@mui/material";
 export default function GenerateAudioButton({id}: {id: string}) {
 
   const generateAudio = async () => {
-    console.log(id);
-    console.log('begin logic');
-
     const res = await fetch(`http://localhost:3000/api/book/${id}/tts`, {
       method: 'POST',
     });
 
-
-    const data = await res.json();
-    
-    console.log(data);
+    await res.json();
 
     /**
      * generating the audio follows two general parts:

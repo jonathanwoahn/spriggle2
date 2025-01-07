@@ -7,6 +7,7 @@ import ChaptersButton from "./chapters-button";
 import Image from "next/image";
 import { IBookData } from "./play/media-player";
 import GenerateAudioButton from "./generate-audio-button";
+import ProcessJobsButton from "./process-jobs-button";
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -81,7 +82,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                 <ChaptersButton bookData={bookData} />
                 {/* this is a temporary button. remove once this can be run from the admin page */}
                 <GenerateAudioButton id={id} />
-                
+                <ProcessJobsButton />
               </Box>
             </Grid>
           </Grid>

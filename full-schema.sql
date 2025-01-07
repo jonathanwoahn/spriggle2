@@ -179,3 +179,7 @@ create unique index unique_book_block_omnibook on public.jobs (
   (data->>'bookBlockId'),
   (data->>'omnibookId')
 );
+
+-- this is just a temporary solution. we'll come back to this later once everyting else is working
+ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;

@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useMenuContext } from "@/context/admin-menu-context";
 import CloseIcon from '@mui/icons-material/Close';
+import WorkIcon from '@mui/icons-material/Work';
 
 const drawerWidth = 240;
 
@@ -27,10 +28,15 @@ export default function AdminMenu() {
       icon: <CollectionsIcon />,
       url: '/admin/collections',
     },
+    // {
+    //   label: 'Tags',
+    //   icon: <CollectionsIcon />,
+    //   url: '/admin/collections',
+    // },
     {
-      label: 'Tags',
-      icon: <CollectionsIcon />,
-      url: '/admin/collections',
+      label: 'Jobs',
+      icon: <WorkIcon />,
+      url: '/admin/jobs',
     },
     {
       label: 'Settings',

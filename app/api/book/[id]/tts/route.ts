@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 interface IJobLog { }
 
-interface IBlockJobs {
+export interface IBlockJobs {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   type: 'text' | 'section';
   data: {
@@ -13,8 +13,8 @@ interface IBlockJobs {
     text: string;
   };
   log: IJobLog[];
+  id?: number;
 }
-
 
 const processBlock = (block: any, blocks: any[]) => {
   const { children, ...blockData } = block;
@@ -26,8 +26,6 @@ const processBlock = (block: any, blocks: any[]) => {
 
   return blocks;
 }
-
-
 
 
 export const POST = async (
@@ -75,29 +73,6 @@ export const POST = async (
     },
     body: JSON.stringify(blockJobs),
   });
-  // console.log(res);
-  
-  
-  // console.log(book);
-
-
-
-
-  /**
-   * 1. get the book and nav data
-   * 2. process through nav data (ideally only filter through the "body matter" items)
-   * 3. retrieve each section, and then go through the section and create the jobs
-   */
-  
-  
-
-  
-  
-  
-
-
-  
-  
 
   return NextResponse.json({message: 'success'});
 
