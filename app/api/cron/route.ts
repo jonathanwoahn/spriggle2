@@ -6,6 +6,8 @@ import OpenAI from 'openai';
 const MAX_CONCURRENT_JOBS = 250;
 const AUDIO_BUCKET = 'audio';
 
+type Any = any;
+
 const ensureBucketExists = async (supabase: any, bucketName: string) => {
   // List all buckets
   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -16,7 +18,7 @@ const ensureBucketExists = async (supabase: any, bucketName: string) => {
   }
 
   // Check if the bucket already exists
-  const bucketExists = buckets.some(bucket => bucket.name === bucketName);
+  const bucketExists = buckets.some((bucket: Any) => bucket.name === bucketName);
 
   if (!bucketExists) {
     // Create the bucket if it doesn't exist
