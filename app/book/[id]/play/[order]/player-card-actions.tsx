@@ -4,8 +4,8 @@ import ListIcon from '@mui/icons-material/List';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { Button, CardActions } from '@mui/material';
 import { useState } from 'react';
-import ChapterDrawer from '../chapter-drawer';
 import { IBookData } from './media-player';
+import ChapterDrawer from '../../chapter-drawer';
 
 
 
@@ -23,8 +23,7 @@ export default function PlayerCardActions({bookData}: {bookData: IBookData}) {
       <ChapterDrawer
         isOpen={isOpen}
         setIsOpen={setIsOpen}
-        title={bookData.data.title}
-        navItems={bookData.data.nav} 
+        bookData={bookData}
       />
     </CardActions>
   );

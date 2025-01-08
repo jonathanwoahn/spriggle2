@@ -2,9 +2,8 @@
 import { Box, Slider, Typography } from "@mui/material";
 import { useState } from "react";
 
-export default function PlayerProgress({ position, setPosition, duration, totalLength }: { position: number, setPosition: (position: number) => void, duration: number, totalLength: number}) {
+export default function PlayerProgress({ position, setPosition, duration, totalLength, chapterTitle }: { position: number, setPosition: (position: number) => void, duration: number, totalLength: number, chapterTitle: string}) {
   
-
   function formatDuration(value: number) {
     const minute = Math.floor(value / 60);
     const secondLeft = value - minute * 60;
@@ -24,10 +23,9 @@ export default function PlayerProgress({ position, setPosition, duration, totalL
     return parts.join(' ');
   }
   
-  
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: 2, pb: 2, }}>
-      <Typography variant="caption" component="p">Chapter Ten: You Know</Typography>
+      <Typography variant="caption" component="p">{chapterTitle}</Typography>
 
       <Slider
         aria-label="time-indicator"

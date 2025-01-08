@@ -49,6 +49,25 @@ export default class Cashmere {
     return await response.json();
   }
 
+  async getSectionBookBlocks(id: string, order: string): Promise<any> {
+    const processBlock = (block: any, blocks: any[]) => {
+      const { children, ...blockData } = block;
+      blocks.push(blockData);
+
+      if (children) {
+        children.forEach((child: any) => processBlock(child, blocks));
+      }
+
+      return blocks;
+    }
+
+    
+    const section = await this.getBookSection(id, parseInt(order));
+    const blocks = processBlock(section, []);
+
+    return blocks;
+  }
+
   // async getOmnibook(id: string): Promise<Omnibook> {
 
   // }

@@ -47,8 +47,7 @@ export const POST = async (
   const blockJobs: IBlockJobs[] = [];
 
   for(let i = 0; i< (book.data.nav || []).length; i++) {
-    const section = await cash.getBookSection(id, i);
-    const blocks = processBlock(section, []);
+    const blocks = await cash.getSectionBookBlocks(id, i);
 
     blocks
       .filter((block: {type: string}) => block.type === 'text' || block.type === 'section')

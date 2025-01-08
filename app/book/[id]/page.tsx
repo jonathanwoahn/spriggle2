@@ -5,9 +5,9 @@ import Footer from "@/components/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
 import Image from "next/image";
-import { IBookData } from "./play/media-player";
 import GenerateAudioButton from "./generate-audio-button";
 import ProcessJobsButton from "./process-jobs-button";
+import { IBookData } from "./play/[order]/media-player";
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -78,7 +78,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             </Grid>
             <Grid size={{xs: 12, md: 5}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
-                <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play`}>Play</Button>
+                <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play/0`}>Play</Button>
                 <ChaptersButton bookData={bookData} />
                 {/* this is a temporary button. remove once this can be run from the admin page */}
                 <GenerateAudioButton id={id} />

@@ -159,7 +159,7 @@ values
 
 -- only drop the job_status if the type already exists
 DROP TYPE IF EXISTS public.job_status;
-CREATE TYPE public.job_status as enum ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE public.job_status as enum ('pending', 'processing', 'completed', 'failed', 'waiting');
 
 DROP TYPE IF EXISTS public.job_type;
 CREATE TYPE public.job_type as enum ('text', 'section', 'omnibook');
@@ -170,6 +170,7 @@ CREATE TABLE public.jobs (
   type job_type not null,
   data jsonb not null,
   log jsonb[] not null,
+  children integer[] DEFAULT '{}',
   created_at timestamp not null default now(),
   updated_at timestamp not null default now()
 );
