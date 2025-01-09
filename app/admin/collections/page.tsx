@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
+import CollectionsTable from "./collections-table";
 
 export default function CollectionsPage() {
   const collections = [
@@ -31,8 +32,8 @@ export default function CollectionsPage() {
         flexDirection: 'column',
         justifyContent: 'start',
       }}>
-        <Typography variant="h4" sx={{pl: 2, pt: 2}}>Collections</Typography>
-        <Paper sx={{ overflow: 'scroll', flex: 1, margin: 2 }}>
+        <CollectionsTable />
+        {/* <Paper sx={{ overflow: 'scroll', flex: 1, margin: 2 }}>
           <TableContainer>
 
             <Table stickyHeader>
@@ -67,7 +68,7 @@ export default function CollectionsPage() {
               rowsPerPage={25}
               rowsPerPageOptions={[25, 50, 100]}
               onPageChange={handleChangePage} />
-        </Box>
+        </Box> */}
     </Box>
     
   );

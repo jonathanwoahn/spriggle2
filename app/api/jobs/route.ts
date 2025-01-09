@@ -1,6 +1,33 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+export const GET = async (req: NextRequest) => {
+  const supabase = await createClient();
+  const searchParams = req.nextUrl.searchParams;
+
+  const orderBy = searchParams.get('orderBy') || 'id';
+  const order = searchParams.get('order') || 'asc';
+  const page = parseInt(searchParams.get('page') || '0');
+  const rowsPerPage = parseInt(searchParams.get('rowsPerPage') || '100');
+  const selectedTab = searchParams.get('selectedTab') || 'failed';
+
+  let query = supabase
+    .from('jobs')
+    .select('*', { count: 'exact' })
+    .order(orderBy, { ascending: order === 'asc' })
+    .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1)
+    .eq('status', selectedTab);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error('Error fetching jobs:', error);
+    return NextResponse.json({error: error.message}, {status: 500});
+  }
+
+  return NextResponse.json({data, count});
+}
+
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
   const supabase = await createClient();

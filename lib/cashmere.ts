@@ -1,5 +1,18 @@
 import { IOmnibookData, Omnibook } from "omnibook";
 
+interface IBookData {
+  uuid: string;
+  data: {
+    title: string;
+    subtitle: string;
+    cover_image: string;
+    creators: string[];
+    creation_date: string;
+    publisher: string;
+    // nav: INav[];
+  };
+}
+
 export default class Cashmere {
   private readonly cashmereURL: string = 'https://omnibk.ai';
   private readonly path: string = '/api';
@@ -68,9 +81,23 @@ export default class Cashmere {
     return blocks;
   }
 
-  // async getOmnibook(id: string): Promise<Omnibook> {
+  async listBooks(qry: { search?: string, limit?: number | string, offset?: number | string }): Promise<{ item: IBookData[], count: number}[]> {
+    const params = {
+      search: qry.search || null,
+      limit: qry.limit || 10,
+      offset: qry.offset || 0
+    };
 
-  // }
+    const url: string = `${this.baseURL}/books?search=${params.search}&limit=${params.limit}&offset=${params.offset}`;
+    const headers = this.headers;
+    const response = await fetch(url, { method: 'GET', headers });
+
+    if(!response.ok) {
+      throw new Error(`Failed to retrieve book list: ${response.statusText}`);
+    }
+    
+    return response.json();
+  }
 
   private get baseURL(): string {
     return `${this.cashmereURL}${this.path}`;

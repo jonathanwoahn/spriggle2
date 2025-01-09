@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { AudioChapterManager } from './audio-manager';
+import BookCoverImage from "@/components/book-cover-image";
 
 export interface INav {
   order: number;
@@ -129,7 +130,7 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
         <Box sx={{borderRadius: 2, overflow: 'hidden', height: '250px'}}>
-          <Image src={`/api/book/${bookData.uuid}/cover`} alt={"Book"} height={250} width={187.5} priority={true} />
+          <BookCoverImage bookId={bookData.uuid} />
         </Box>
         </Box>
         <PlayerProgress

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useMenuContext } from "@/context/admin-menu-context";
 import CloseIcon from '@mui/icons-material/Close';
 import WorkIcon from '@mui/icons-material/Work';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 const drawerWidth = 240;
 
@@ -22,6 +23,11 @@ export default function AdminMenu() {
       label: 'Dashboard',
       icon: <HomeIcon />,
       url: '/admin',
+    },
+    {
+      label: 'Books',
+      icon: <LibraryBooksIcon />,
+      url: '/admin/books',
     },
     {
       label: 'Collections',

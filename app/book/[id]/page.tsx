@@ -8,6 +8,7 @@ import Image from "next/image";
 import GenerateAudioButton from "./generate-audio-button";
 import ProcessJobsButton from "./process-jobs-button";
 import { IBookData } from "./play/[order]/media-player";
+import BookCoverImage from "@/components/book-cover-image";
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -57,13 +58,11 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
       <Box sx={{ width: '100%', maxWidth: '840px', marginLeft: 'auto', marginRight: 'auto', }}>
         <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', p: 2, pt: 8, }}>
           <Grid container sx={{width: '100%'}}>
-            <Grid size={{xs: 12, md: 7}}>
+            <Grid size={{xs: 12, md: 8}}>
               <Grid container>
                 <Grid size={{xs: 12, md: 5}}>
                   <Box sx={{display: 'flex', justifyContent: 'center', }}>
-                    <Box sx={{borderRadius: 2, overflow: 'hidden'}}>
-                      <Image src={`/api/book/${bookData.uuid}/cover`} alt={bookData.data.title} height={300} width={225} />
-                    </Box>
+                    <BookCoverImage bookId={bookData.uuid} />
                   </Box>
                 </Grid>
                 <Grid size={{xs: 12, md: 7}}>
@@ -76,7 +75,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                 </Grid>
               </Grid>
             </Grid>
-            <Grid size={{xs: 12, md: 5}}>
+            <Grid size={{xs: 12, md: 4}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play/0`}>Play</Button>
                 <ChaptersButton bookData={bookData} />

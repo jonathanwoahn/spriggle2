@@ -4,8 +4,6 @@ import { Box, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead
 import { useEffect, useState } from "react";
 import { format } from 'date-fns';
 
-const supabase = createClient();
-
 export default function JobsTable() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -19,26 +17,11 @@ export default function JobsTable() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      let query = supabase
-        .from('jobs')
-        .select('*', { count: 'exact' })
-        .order(orderBy, { ascending: order === 'asc' })
-        .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1)
-        .eq('status', selectedTab);
+      const response = await fetch(`/api/jobs?orderBy=${orderBy}&order=${order}&page=${page}&rowsPerPage=${rowsPerPage}&selectedTab=${selectedTab}`);
+      const {count, data} = await response.json();
 
-      Object.keys(filters).forEach((key) => {
-        if (filters[key]) {
-          query = query.ilike(key, `%${filters[key]}%`);
-        }
-      });
-
-      const { data, error, count } = await query;
-
-      if (error) console.error('Error fetching jobs:', error);
-      else {
-        setJobs(data);
-        setTotalJobs(count || 0);
-      }
+      setJobs(data);
+      setTotalJobs(count || 0);
     };
 
     fetchJobs();
