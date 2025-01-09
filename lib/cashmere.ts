@@ -16,6 +16,7 @@ interface IBookData {
 export default class Cashmere {
   private readonly cashmereURL: string = 'https://omnibk.ai';
   private readonly path: string = '/api';
+  private readonly version: string = '/v1';
   private headers: Headers = new Headers();
   
   constructor(private readonly cashmereAPIKey: string) {
@@ -85,7 +86,7 @@ export default class Cashmere {
     const params = {
       search: qry.search || null,
       limit: qry.limit || 10,
-      offset: qry.offset || 0
+      offset: qry.offset || 0,
     };
 
     const url: string = `${this.baseURL}/books?search=${params.search}&limit=${params.limit}&offset=${params.offset}`;
@@ -100,6 +101,6 @@ export default class Cashmere {
   }
 
   private get baseURL(): string {
-    return `${this.cashmereURL}${this.path}`;
+    return `${this.cashmereURL}${this.path}${this.version}`;
   }
 }

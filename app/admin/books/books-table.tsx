@@ -15,11 +15,22 @@ export default function BooksTable() {
 
   useEffect(() => {
     const fetchBooks = async () => {
-      const response = await fetch(`/api/books?limit=${rowsPerPage}&offset=${page * rowsPerPage}&search=${search}`);
-      const data = await response.json();
 
-      setBooks(data.items);
-      setTotalBooks(data.count);
+      try {
+        const response = await fetch(`/api/books?limit=${rowsPerPage}&offset=${page * rowsPerPage}&search=${search}`);
+        const {items, count, error} = await response.json();
+  
+        if(error) {
+          console.error(error);
+          return;
+        }
+  
+        setBooks(items);
+        setTotalBooks(count);
+
+      }catch(e) {
+        console.log(e);
+      }
     };
 
     fetchBooks();
@@ -64,6 +75,8 @@ export default function BooksTable() {
       render: (val: string) => format(new Date(val), 'yyyy-MM-dd'),
     },
   ];
+
+
   
 
   return (

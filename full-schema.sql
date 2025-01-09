@@ -184,3 +184,24 @@ create unique index unique_book_block_omnibook on public.jobs (
 -- this is just a temporary solution. we'll come back to this later once everyting else is working
 ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;
+
+
+
+-- create a "collections" table. it should have an id, collection name and description. 
+
+create table public.collections (
+  id serial primary key,
+  name varchar(255) not null,
+  description text not null,
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now()
+);
+
+-- I need a table that connects collections to bookId's. This table should have an id, collection_id, book_id, and created_at. It should connect to the collections table, but the book_id's are an external id
+
+create table public.collection_books (
+  id serial primary key,
+  collection_id integer references public.collections(id) not null,
+  book_id varchar(30) not null,
+  created_at timestamp not null default now()
+);

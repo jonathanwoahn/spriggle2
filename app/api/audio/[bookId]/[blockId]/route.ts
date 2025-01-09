@@ -2,12 +2,12 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const GET = async (
-  req: NextRequest,
-  { params }: { params: { id: string, order: string } }
+  res: NextRequest,
+  { params }: { params: Promise<{ id: string, order: string }> }
 ) => {
-  const data = await params;
+  // const data = await params;
 
-  return NextResponse.json({ id: data.id, order: data.order });
+  return NextResponse.json({ });
 
   // // this should retrieve the proper file from the storage bucket. the goal is to proxy the request so the client doesn't have direct access to supabase
   // const supabase = await createClient();

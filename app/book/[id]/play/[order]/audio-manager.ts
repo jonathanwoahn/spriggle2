@@ -22,7 +22,7 @@ export class AudioChapterManager {
     await this.loadMetadata();
 
     // Start preloading blocks in background
-    this.startPreloading();
+    // this.startPreloading();
   }
 
   private async loadMetadata() {
@@ -38,19 +38,19 @@ export class AudioChapterManager {
     this.metadataLoaded = true;
   }
 
-  private async startPreloading() {
-    // Start loading blocks in background
-    for (const blockId of this.blockQueue) {
-      if (!this.audioBuffers.has(blockId)) {
-        try {
-          const buffer = await this.loadBlock(blockId);
-          this.audioBuffers.set(blockId, buffer);
-        } catch (error) {
-          console.error(`Failed to preload block ${blockId}:`, error);
-        }
-      }
-    }
-  }
+  // private async startPreloading() {
+  //   // Start loading blocks in background
+  //   for (const blockId of this.blockQueue) {
+  //     if (!this.audioBuffers.has(blockId)) {
+  //       try {
+  //         const buffer = await this.loadBlock(blockId);
+  //         this.audioBuffers.set(blockId, buffer);
+  //       } catch (error) {
+  //         console.error(`Failed to preload block ${blockId}:`, error);
+  //       }
+  //     }
+  //   }
+  // }
 
   private async loadBlock(blockId: string): Promise<AudioBuffer> {
     const response = await fetch(`/api/audio/${this.bookId}/${blockId}`);
@@ -58,63 +58,63 @@ export class AudioChapterManager {
     return await this.audioContext.decodeAudioData(arrayBuffer);
   }
 
-  async play(startPosition: number = 0) {
-    if (this.isPlaying) return;
+  // async play(startPosition: number = 0) {
+  //   if (this.isPlaying) return;
 
-    // Find which block contains our target position
-    let accumulatedTime = 0;
-    let targetBlockId: string | null = null;
-    let targetTime = 0;
+  //   // Find which block contains our target position
+  //   let accumulatedTime = 0;
+  //   let targetBlockId: string | null = null;
+  //   let targetTime = 0;
 
-    for (const blockId of this.blockQueue) {
-      const blockDuration = await this.getBlockDuration(blockId);
-      if (startPosition >= accumulatedTime &&
-        startPosition < accumulatedTime + blockDuration) {
-        targetBlockId = blockId;
-        targetTime = startPosition - accumulatedTime;
-        break;
-      }
-      accumulatedTime += blockDuration;
-    }
+  //   for (const blockId of this.blockQueue) {
+  //     const blockDuration = await this.getBlockDuration(blockId);
+  //     if (startPosition >= accumulatedTime &&
+  //       startPosition < accumulatedTime + blockDuration) {
+  //       targetBlockId = blockId;
+  //       targetTime = startPosition - accumulatedTime;
+  //       break;
+  //     }
+  //     accumulatedTime += blockDuration;
+  //   }
 
-    if (targetBlockId) {
-      // Load block if not cached
-      if (!this.audioBuffers.has(targetBlockId)) {
-        const buffer = await this.loadBlock(targetBlockId);
-        this.audioBuffers.set(targetBlockId, buffer);
-      }
+  //   if (targetBlockId) {
+  //     // Load block if not cached
+  //     if (!this.audioBuffers.has(targetBlockId)) {
+  //       const buffer = await this.loadBlock(targetBlockId);
+  //       this.audioBuffers.set(targetBlockId, buffer);
+  //     }
 
-      const buffer = this.audioBuffers.get(targetBlockId)!;
-      const source = this.audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.audioContext.destination);
+  //     const buffer = this.audioBuffers.get(targetBlockId)!;
+  //     const source = this.audioContext.createBufferSource();
+  //     source.buffer = buffer;
+  //     source.connect(this.audioContext.destination);
 
-      this.currentSource = source;
-      this.startTime = this.audioContext.currentTime - targetTime;
-      source.start(0, targetTime);
-      this.isPlaying = true;
+  //     this.currentSource = source;
+  //     this.startTime = this.audioContext.currentTime - targetTime;
+  //     source.start(0, targetTime);
+  //     this.isPlaying = true;
 
-      // Set up next block
-      source.onended = () => this.playNextBlock(targetBlockId!);
-    }
-  }
+  //     // Set up next block
+  //     source.onended = () => this.playNextBlock(targetBlockId!);
+  //   }
+  // }
 
-  private async playNextBlock(currentBlockId: string) {
-    const currentIndex = this.blockQueue.indexOf(currentBlockId);
-    if (currentIndex < this.blockQueue.length - 1) {
-      const nextBlockId = this.blockQueue[currentIndex + 1];
-      await this.play(this.getBlockStartTime(nextBlockId));
-    }
-  }
+  // private async playNextBlock(currentBlockId: string) {
+  //   const currentIndex = this.blockQueue.indexOf(currentBlockId);
+  //   if (currentIndex < this.blockQueue.length - 1) {
+  //     const nextBlockId = this.blockQueue[currentIndex + 1];
+  //     await this.play(this.getBlockStartTime(nextBlockId));
+  //   }
+  // }
 
-  private getBlockStartTime(blockId: string): number {
-    let startTime = 0;
-    for (const id of this.blockQueue) {
-      if (id === blockId) break;
-      startTime += this.getBlockDuration(id);
-    }
-    return startTime;
-  }
+  // private getBlockStartTime(blockId: string): number {
+  //   let startTime = 0;
+  //   for (const id of this.blockQueue) {
+  //     if (id === blockId) break;
+  //     startTime += this.getBlockDuration(id);
+  //   }
+  //   return startTime;
+  // }
 
   private async getBlockDuration(blockId: string): Promise<number> {
     if (this.audioBuffers.has(blockId)) {
