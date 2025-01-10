@@ -68,7 +68,7 @@ export default function PlayerProgress({ position, setPosition, duration, totalL
         {/* how far listened in current chapter */}
         <Typography variant="caption" component="p">{formatDuration(position)}</Typography>
         {/* total amount of time remaining in the audiobook */}
-        <Typography variant="caption" component="p">{formatDuration2(totalLength - position)} left</Typography>
+        {/* <Typography variant="caption" component="p">{formatDuration2(totalLength - position)} left</Typography> */}
         {/* total amount of time left in this chapter */}
         <Typography variant="caption" component="p">-{formatDuration(duration - position)}</Typography>
       </Box>

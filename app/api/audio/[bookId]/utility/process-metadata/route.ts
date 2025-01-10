@@ -1,11 +1,3 @@
-/**
- * 1. get all of the sections for the book
- * 2. for each section, get all of the blocks
- * 3. ensure that each block has an audio file AND a metadata record
- * 4. take all of the metadata tags, and calculate the start time for each tag
- * 5. update the metadata record start_time field with the start time
- */
-
 import Cashmere from "@/lib/cashmere";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";

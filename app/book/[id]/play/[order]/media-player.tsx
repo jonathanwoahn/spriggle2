@@ -29,7 +29,7 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
 
   const totalLength = 10000;
   const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(100);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
@@ -47,6 +47,8 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
       setIsLoading(true);
       await audioManagerRef.current.prepareChapter(params.id, parseInt(params.order));
 
+      // console.log(audioManagerRef.current.getDuration())
+      
       // setDuration(audioManagerRef.current.getDuration());
       setIsLoading(false);
     };
@@ -65,8 +67,10 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   }
   
   const handleSeek = (newPosition: number) => {
+    console.log(newPosition);
+    
     if(!audioManagerRef.current) return;
-    audioManagerRef.current.seek(newPosition);
+    // audioManagerRef.current.seek(newPosition);
     setPosition(newPosition);
   };
   
