@@ -11,6 +11,8 @@ export interface IBlockJobs {
     bookBlockId: string;
     omnibookId: string;
     text: string;
+    index: number;
+    section_order: number;
   };
   log: IJobLog[];
   id?: number;
@@ -33,25 +35,29 @@ export const POST = async (
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
 
-
-  const response = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const baseUrl = request.nextUrl.origin;
+  const response = await fetch(`${baseUrl}/api/settings/cashmereApiKey`);
   const { value } = await response.json();
 
   const cash = new Cashmere(value);
   const book = await cash.getBook(id);
+  
 
   const blockJobs: IBlockJobs[] = [];
 
   for(let i = 0; i< (book.data.nav || []).length; i++) {
     const blocks = await cash.getSectionBookBlocks(id, `${i}`);
+    let count = 0;
 
     blocks
       .filter((block: {type: string}) => block.type === 'text' || block.type === 'section')
-      .forEach((block: {uuid: string, type: 'text' | 'section', properties: {text: string}}) => {
+      .forEach((block: {uuid: string, type: 'text' | 'section', properties: {text: string}}, idx: number) => {
+        
+        if(!book.data.nav || !book.data.nav[i]) {
+          throw new Error(`Section order "${i}" not found or doesn't exist`)
+        }
+
         blockJobs.push({
           status: 'pending',
           type: block.type,
@@ -59,13 +65,15 @@ export const POST = async (
             bookBlockId: block.uuid,
             omnibookId: id,
             text: Array.isArray(block.properties.text) ? block.properties.text.join(' ') : block.properties.text,
+            index: count++,
+            section_order: book.data.nav[i].order,
           },
           log: [],
         });
       });
   };
 
-  const res = await fetch(`${defaultUrl}/api/jobs`, {
+  await fetch(`${baseUrl}/api/jobs`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

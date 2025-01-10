@@ -205,3 +205,18 @@ create table public.collection_books (
   book_id varchar(30) not null,
   created_at timestamp not null default now()
 );
+
+-- build a table that holds audio file metadata. it should include things like book_id, block_id, duration, start_time, section order number, and sequence number
+
+create table public.audio_metadata (
+  id serial primary key,
+  book_id varchar(32) not null,
+  block_id varchar(32) not null,
+  duration integer not null,
+  start_time integer,
+  section_order integer not null,
+  block_index integer not null,
+  created_at timestamp not null default now(),
+  updated_at timestamp not null default now(),
+  unique (book_id, block_id)
+);

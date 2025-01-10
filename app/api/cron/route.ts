@@ -2,8 +2,9 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { IBlockJobs } from "../book/[id]/tts/route";
 import OpenAI from 'openai';
+import * as mm from 'music-metadata';
 
-const MAX_CONCURRENT_JOBS = 250;
+const MAX_CONCURRENT_JOBS = 100;
 const AUDIO_BUCKET = 'audio';
 
 type Any = any;
@@ -40,8 +41,6 @@ export const GET = async (req: NextRequest) => {
   const supabase = await createClient();
   await ensureBucketExists(supabase, AUDIO_BUCKET);
 
-
-
     // Retrieve the OpenAI API key from the /settings endpoint
   const { data: settings, error: settingsError } = await supabase
     .from('app_settings')
@@ -70,6 +69,8 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: 'Error fetching jobs' });
   }
 
+  console.log(`Queuing up ${jobs.length} jobs`);
+  
   // Process jobs in parallel
   const processJob = async (job: IBlockJobs) => {
     try {
@@ -99,6 +100,32 @@ export const GET = async (req: NextRequest) => {
         throw new Error(`Error storing audio: ${storageError.message}`);
       }
 
+      try {
+        const meta = await mm.parseBuffer(buffer, 'audio/mpeg');
+        const duration = Math.trunc((meta.format.duration || 0) * 1000);
+
+        if(!duration || duration === 0) {
+          throw new Error('Failed to get audio duration');
+        }
+  
+        // store metadata in the audio_metadata table
+        const { data, error: metadataError } = await supabase.from('audio_metadata')
+          .insert({
+            book_id: job.data.omnibookId,
+            block_id: job.data.bookBlockId,
+            section_order: job.data.section_order,
+            block_index: job.data.index,
+            duration,
+          });
+  
+        if(metadataError) {
+          throw new Error(`Error storing metadata for blockId: ${job.data.bookBlockId}, ${metadataError.message}`);
+        }
+
+      } catch (e) {
+        throw new Error((e as Error).message);
+      }
+
       // Update job status to 'completed'
       await supabase
         .from('jobs')
@@ -112,7 +139,7 @@ export const GET = async (req: NextRequest) => {
       // Update job status to 'failed' and log the error
       const logEntry = {
         timestamp: new Date().toISOString(),
-        error: err,
+        error: JSON.stringify((err as Error).message),
       };
 
       // Fetch the current log
@@ -128,7 +155,6 @@ export const GET = async (req: NextRequest) => {
       }
 
       const updatedLog = jobData.log ? [...jobData.log, logEntry] : [logEntry];
-
       await supabase
         .from('jobs')
         .update({

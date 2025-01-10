@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
         hostname: 'picsum.photos',
         port: '',
       },
-      // https://booktalk-media.nyc3.cdn.digitaloceanspaces.com
       {
         protocol: 'https',
         hostname: 'booktalk-media.nyc3.cdn.digitaloceanspaces.com',

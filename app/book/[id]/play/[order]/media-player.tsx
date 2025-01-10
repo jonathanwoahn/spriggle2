@@ -33,93 +33,41 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
-    audioManagerRef.current = new AudioChapterManager();
-    return () => {
-      // Cleanup
-      // audioManagerRef.current?.pause();
-    };
+    if(audioRef.current) {
+      audioManagerRef.current = new AudioChapterManager(audioRef.current);
+    }
   }, []);
 
   useEffect(() => {
     const loadChapter = async () => {
       if (!audioManagerRef.current) return;
-
       setIsLoading(true);
-      try {
-        // Get block IDs for current chapter
-        // const chapterBlocks = await fetchChapterBlocks(params.id, params.order);
+      await audioManagerRef.current.prepareChapter(params.id, parseInt(params.order));
 
-        const response = await fetch(`/api/book/${params.id}/audio/${params.order}`);
-        if(!response.ok) {
-          throw new Error('Failed to load chapter');
-        }
-        const blocks = await response.json();
-
-        // Prepare the chapter - this will load metadata first
-        await audioManagerRef.current.prepareChapter(blocks, params.id);
-
-        // // Once metadata is loaded, we can show total duration
-        // setDuration(audioManagerRef.current.getDuration());
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to load chapter:', error);
-        setIsLoading(false);
-      }
+      // setDuration(audioManagerRef.current.getDuration());
+      setIsLoading(false);
     };
 
     loadChapter();
   }, [params.id, params.order]);
+
+  const handlePlayPause = () => {
+    if (!audioManagerRef.current) return;
+    if(isPlaying) {
+      audioManagerRef.current.pause();
+    } else {
+      audioManagerRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  }
   
-
-  // useEffect(() => {
-  //   // When chapter changes, load new audio
-  //   const loadChapter = async () => {
-  //     if (!audioManagerRef.current) return;
-
-  //     // Get block IDs for current chapter
-  //     // const chapterBlocks = await fetchChapterBlocks(params.id, params.order);
-
-  //     // Load audio files
-  //     // const duration = await audioManagerRef.current.loadChapter(
-  //     //   chapterBlocks,
-  //     //   bookData.uuid
-  //     // );
-  //     // setDuration(duration);
-  //   };
-
-  //   loadChapter();
-  // }, [params.id, params.order]);
-
-  // // Update position during playback
-  // useEffect(() => {
-  //   if (!isPlaying) return;
-
-  //   const interval = setInterval(() => {
-  //     if (audioManagerRef.current) {
-  //       setPosition(audioManagerRef.current.getCurrentTime());
-  //     }
-  //   }, 100);
-
-  //   return () => clearInterval(interval);
-  // }, [isPlaying]);
-
-  // const handlePlayPause = () => {
-  //   if (!audioManagerRef.current) return;
-
-  //   if (isPlaying) {
-  //     audioManagerRef.current.pause();
-  //   } else {
-  //     audioManagerRef.current.play(position);
-  //   }
-  //   setIsPlaying(!isPlaying);
-  // };
-
   const handleSeek = (newPosition: number) => {
-    // if (!audioManagerRef.current) return;
-    // audioManagerRef.current.seek(newPosition);
-    // setPosition(newPosition);
+    if(!audioManagerRef.current) return;
+    audioManagerRef.current.seek(newPosition);
+    setPosition(newPosition);
   };
   
   return (
@@ -140,7 +88,8 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
           totalLength={totalLength}
           chapterTitle={bookData.data.nav[parseInt(params.order)].label}
         />
-        <PlayerControls isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+        <audio ref={audioRef} />
+        <PlayerControls isPlaying={isPlaying} handlePlayPause={handlePlayPause} />
       </CardContent>
       <PlayerCardActions bookData={bookData} />
     </Card>

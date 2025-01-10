@@ -37,17 +37,17 @@ export default class Cashmere {
   }
   
   async getBookCoverURL(id: string): Promise<string> {
-    const url: string = `${this.baseURL}/book/${id}/cover`;
+    const url: string = `${this.baseURL}/book/${id}/cover_image`;
     const headers = this.headers;
     const response = await fetch(url, {method: 'GET', headers});
 
     if(!response.ok) {
       throw new Error(`Failed to retrieve book coverURL: ${response.statusText}`)
-      
     }
 
-    const { cover_image} = await response.json();
-    return cover_image;
+    const data = await response.json();
+
+    return data;
   }
 
   // TODO: need to update the response type once we get the omnibook library added

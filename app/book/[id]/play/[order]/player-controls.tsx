@@ -7,7 +7,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import { Box, IconButton } from '@mui/material';
 
 
-export default function PlayerControls({isPlaying, setIsPlaying}: {isPlaying: boolean, setIsPlaying: (isPlaying: boolean) => void}) {
+export default function PlayerControls({ isPlaying, handlePlayPause }: { isPlaying: boolean, handlePlayPause: () => void}) {
   return (
     <Box
       sx={{
@@ -20,15 +20,15 @@ export default function PlayerControls({isPlaying, setIsPlaying}: {isPlaying: bo
       <IconButton>
         <SkipPreviousIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
-      <IconButton>
+      {/* <IconButton>
         <Replay30Icon sx={{ fontSize: '2rem' }} />
-      </IconButton>
-      <IconButton onClick={() => setIsPlaying(!isPlaying)}>
+      </IconButton> */}
+      <IconButton onClick={() => handlePlayPause()}>
         {isPlaying ? <PauseIcon sx={{ fontSize: '4rem' }} /> : <PlayArrowIcon sx={{ fontSize: '4rem' }} />}
       </IconButton>
-      <IconButton>
+      {/* <IconButton>
         <Forward30Icon sx={{ fontSize: '2rem' }} />
-      </IconButton>
+      </IconButton> */}
       <IconButton>
         <SkipNextIcon sx={{ fontSize: '2rem' }} />
       </IconButton>

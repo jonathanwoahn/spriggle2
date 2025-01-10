@@ -8,16 +8,11 @@ export const GET = async (
 ) => {
   const { id } = await params;
   
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
+  const baseUrl = request.nextUrl.origin;
   
-  // TODO:  need to update this to dynamically get the route of the vercel API url
-  const keyResponse = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const keyResponse = await fetch(`${baseUrl}/api/settings/cashmereApiKey`);
   const { value } = await keyResponse.json();
 
-  
   const cash = new Cashmere(value);
   const url = await cash.getBookCoverURL(id);
 
