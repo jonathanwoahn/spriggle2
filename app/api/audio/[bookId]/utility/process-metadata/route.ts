@@ -8,10 +8,6 @@ export const POST = async (
   { params }: { params: Promise<{ bookId: string }> },
 ) => {
   const { bookId } = await params;
-  const baseUrl = request.nextUrl.origin;
-  const response = await fetch(`${baseUrl}/api/settings/cashmereApiKey`);
-  const { value } = await response.json();
-
   const sb = await createClient();
 
   const { data: audioFiles, error: audioError } = await sb.storage.from('audio').list(bookId, {limit: 10000});
@@ -19,6 +15,10 @@ export const POST = async (
   if(audioError) {
     throw new Error((audioError as Error).message);
   }
+
+  const baseUrl = request.nextUrl.origin;
+  const response = await fetch(`${baseUrl}/api/settings/cashmereApiKey`);
+  const { value } = await response.json();
 
   const cash = new Cashmere(value);
   const book = await cash.getBook(bookId);

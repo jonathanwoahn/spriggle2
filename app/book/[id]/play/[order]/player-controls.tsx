@@ -7,7 +7,22 @@ import PauseIcon from '@mui/icons-material/Pause';
 import { Box, IconButton } from '@mui/material';
 
 
-export default function PlayerControls({ isPlaying, handlePlayPause }: { isPlaying: boolean, handlePlayPause: () => void}) {
+export default function PlayerControls({
+    isPlaying,
+    handlePlayPause,
+    bookData,
+    order,
+    skip,
+  }: {
+    isPlaying: boolean,
+    handlePlayPause: () => void,
+    bookData: IBookData,
+    order: string,
+    skip: (direction: 'prev' | 'next') => void,
+  }) {
+
+  // const skip = () => console.log()
+  
   return (
     <Box
       sx={{
@@ -17,7 +32,9 @@ export default function PlayerControls({ isPlaying, handlePlayPause }: { isPlayi
         pt: 2,
         pb: 2,
       }}>
-      <IconButton>
+      <IconButton
+        onClick={() => skip('prev')}
+        disabled={parseInt(order) === 0}>
         <SkipPreviousIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
       {/* <IconButton>
@@ -29,7 +46,9 @@ export default function PlayerControls({ isPlaying, handlePlayPause }: { isPlayi
       {/* <IconButton>
         <Forward30Icon sx={{ fontSize: '2rem' }} />
       </IconButton> */}
-      <IconButton>
+      <IconButton
+        onClick={() => skip('next')}
+        disabled={parseInt(order) === bookData.data.nav.length - 1}>
         <SkipNextIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
     </Box>

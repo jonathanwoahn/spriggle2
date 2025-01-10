@@ -9,48 +9,43 @@ export const GET = async (
   const {bookId, order } = await params;
   const sb = await createClient();
 
-  const { data: metadata, error: metadataError } = await sb
-    .from('audio_metadata')
-    .select('*')
-    .eq('book_id', bookId)
-    .eq('section_order', order)
-    .order('block_index', { ascending: true });
+  const { data: audioBlob, error: audioError } = await sb
+    .storage
+    .from('audio')
+    .download(`${bookId}/${bookId}-${order}.mp3`);
 
-  if (metadataError) {
-    return NextResponse.json({ error: metadataError.message}, {status: 500});
+  if(audioError) {
+    return NextResponse.json({ error: audioError.message}, {status: 500});
   }
+
+  if (!audioBlob) {
+  console.error('audioBlob is undefined', audioBlob);
+  return NextResponse.json({ error: 'Failed to fetch audio data' }, { status: 500 });
+}
 
   const audioStream = new PassThrough();
-
-  for( const meta of metadata) {
-    console.log(meta);
-    const { data: audioData, error: audioError } = await sb
-      .storage
-      .from('audio')
-      .download(`${bookId}/${meta.block_id}.mp3`);
-
-    if (audioError) {
-      return NextResponse.json({error: audioError.message}, {status: 500});
-    }
-
-    const buffer = await audioData.arrayBuffer();
-    audioStream.write(Buffer.from(buffer));
-  }
-
-  audioStream.end();
-
   const readableStream = new ReadableStream({
     start(controller){
       audioStream.on('data', (chunk) => { controller.enqueue(chunk); });
       audioStream.on('end', () => { controller.close()}); 
       audioStream.on('error', (error) => { controller.error(error); });
     }
-  })
+  });
+
+  const reader = audioBlob.stream().getReader();
+  reader.read().then(function process({ done, value }) {
+    if (done) {
+      audioStream.end();
+      return;
+    }
+    audioStream.write(value);
+    reader.read().then(process);
+  });
 
   return new NextResponse(readableStream, {
     headers: {
       'Content-Type': 'audio/mpeg',
-      'Transfer-Encoding': 'chunked',
+      'Content-Disposition': `attachment; filename="${bookId}-${order}.mp3"`,
     },
   });
 }

@@ -5,6 +5,33 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 
+
+const MAX_RETRIES = 3;
+
+async function downloadWithRetry(sb: any, bookId: string, blockId: string, filePath: string, retries: number = MAX_RETRIES): Promise<void> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const { data: audioFile, error: audioError } = await sb
+        .storage
+        .from('audio')
+        .download(`${bookId}/${blockId}.mp3`);
+
+      if (audioError) {
+        throw new Error(audioError.message);
+      }
+
+      fs.writeFileSync(filePath, Buffer.from(await audioFile.arrayBuffer()));
+      console.log(`Successfully downloaded ${blockId} on attempt ${attempt}`);
+      return;
+    } catch (error) {
+      console.error(`Failed to download ${blockId} on attempt ${attempt}: ${(error as Error).message}`);
+      if (attempt === retries) {
+        throw new Error(`Failed to download ${blockId} after ${retries} attempts`);
+      }
+    }
+  }
+}
+
 export const POST = async (
   request: NextRequest,
   { params }: { params: Promise<{ bookId: string, order: string }> },
@@ -50,31 +77,28 @@ export const POST = async (
     fs.mkdirSync(tmpFolder);
   }
 
-  // iterate through all of the audio block metadata files, and download the audio file. Store it to the temp directory
-  for (let i = 0; i < metadata.length; i++) {
-    console.log(`Processing file ${i + 1} of ${metadata.length} of book ${bookId}`);
-    const { data: audioFile, error: audioError } = await sb
-      .storage
-      .from('audio')
-      .download(`${bookId}/${metadata[i].block_id}.mp3`);
-
-    if(audioError) {
-      return NextResponse.json({error: (audioError as Error).message}, {status: 500});
-    }
-
-    const filePath = path.join(tmpFolder, `${metadata[i].block_id}.mp3`);
-    fs.writeFileSync(filePath, Buffer.from(await audioFile.arrayBuffer()));
-    audioFiles.push(filePath);
-  }
+  // iterate through all of the metadata items, and download them in parallel. WAY faster than in serial, it was amazing
+  try {
+    await Promise.all(metadata.map(async (meta, i) => {
+      console.log(`Processing file ${i + 1} of ${metadata.length} of book ${bookId}`);
+      const filePath = path.join(tmpFolder, `${meta.block_id}.mp3`);
+      await downloadWithRetry(sb, bookId, meta.block_id, filePath);
+      audioFiles.push({meta, filePath});
+    }));
+  } catch (error) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }  
 
 
   // Combine all of the audio files into a single file
   await new Promise((resolve, reject) => {
     const ffmpegCommand = ffmpeg();
 
-    audioFiles.forEach((file) => {
-      ffmpegCommand.input(file);
-    });
+    audioFiles
+      .sort((a, b) => a.meta.block_index - b.meta.block_index)
+      .forEach((file) => {
+        ffmpegCommand.input(file.filePath);
+      });
 
     ffmpegCommand
       .on('end', resolve)
@@ -86,7 +110,7 @@ export const POST = async (
     return NextResponse.json({ error: 'Combined file not found'}, {status: 500})
   }
 
-  // check to make sure the file actually has contents in it
+  // check to make sure the file actually has contents in it. Some times for one reason or another, the file is empty
   const fileStats = fs.statSync(combinedFilePath);
 
   if(fileStats.size === 0) {
