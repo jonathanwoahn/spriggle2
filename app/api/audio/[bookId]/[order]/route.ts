@@ -45,7 +45,8 @@ export const GET = async (
   return new NextResponse(readableStream, {
     headers: {
       'Content-Type': 'audio/mpeg',
-      'Content-Disposition': `attachment; filename="${bookId}-${order}.mp3"`,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=3600, immutable',
     },
   });
 }

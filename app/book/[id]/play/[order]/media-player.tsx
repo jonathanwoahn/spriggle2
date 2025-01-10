@@ -33,24 +33,60 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const isSeekingRef = useRef(false);
+
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
-    if(audioRef.current) {
-      audioManagerRef.current = new AudioChapterManager(audioRef.current);
-      audioRef.current.addEventListener('loadedmetadata', () => {
-        if (audioRef.current) {
-          setDuration(audioRef.current.duration);
-        }
+    audioManagerRef.current = new AudioChapterManager(new Audio());
+
+    if(!audioManagerRef.current) return;
+
+    audioManagerRef.current.addEventListener('loadedmetadata', () => {
+      if (!audioManagerRef.current) return;
+
+      setDuration(audioManagerRef.current.duration);
+    });
+
+    audioManagerRef.current.addEventListener('timeupdate', () => {
+      if (!isSeekingRef.current && !!audioManagerRef.current) {
+        setPosition(audioManagerRef.current.currentTime);
+      }
+    });
+
+    return () => {
+      if (!audioManagerRef.current) return;
+
+      audioManagerRef.current.removeEventListener('loadedmetadata', () => {
+        if (!audioManagerRef.current) return;
+
+        setDuration(audioManagerRef.current.duration);
       });
 
-      audioRef.current.addEventListener('timeupdate', () => {
-        if (audioRef.current) {
-          setPosition(audioRef.current.currentTime);
+      audioManagerRef.current.removeEventListener('timeupdate', () => {
+        if (!isSeekingRef.current) {
+          if (!audioManagerRef.current) return;
+
+          setPosition(audioManagerRef.current.currentTime);
         }
-      });    
-    }
+      });
+    };
+    
+    // if(audioRef.current) {
+    //   audioManagerRef.current = new AudioChapterManager(audioRef.current);
+    //   audioRef.current.addEventListener('loadedmetadata', () => {
+    //     if (audioRef.current) {
+    //       setDuration(audioRef.current.duration);
+    //     }
+    //   });
+
+    //   audioRef.current.addEventListener('timeupdate', () => {
+    //     if (audioRef.current && !isSeekingRef.current) {
+    //       setPosition(audioRef.current.currentTime);
+    //     }
+    //   });    
+    // }
   }, []);
 
   useEffect(() => {
@@ -76,12 +112,18 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   }
   
   const handleSeek = (newPosition: number) => {
-    console.log(newPosition);
-    
     if(!audioManagerRef.current) return;
-    // audioManagerRef.current.seek(newPosition);
     setPosition(newPosition);
   };
+
+  const handleSeekEnd = () => {
+    if(audioManagerRef.current) {
+      audioManagerRef.current.seek(position);
+    } else {
+      console.error('audioManagerRef.current is null');
+    }
+    isSeekingRef.current = false;
+  }
 
   const handleSkip = (dir: 'prev' | 'next') => {
     const currentOrder = parseInt(params.order);
@@ -90,7 +132,11 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
     if(newOrder < 0 || newOrder >= bookData.data.nav.length) return;
     router.push(`/book/${params.id}/play/${newOrder}`);
   }
-  
+
+  const handleSeekStart = () => {
+    isSeekingRef.current = true;
+  }
+
   return (
     <Card>
       <CardActionArea href={`/book/${bookData.uuid}`}>
@@ -105,11 +151,13 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
         <PlayerProgress
           position={position}
           setPosition={handleSeek}
+          onSeekEnd={handleSeekEnd}
           duration={duration}
           totalLength={totalLength}
           chapterTitle={bookData.data.nav[parseInt(params.order)].label}
+          onSeekStart={handleSeekStart}
         />
-        <audio ref={audioRef} />
+        {/* <audio ref={audioRef} /> */}
         <PlayerControls
           isPlaying={isPlaying}
           handlePlayPause={handlePlayPause}

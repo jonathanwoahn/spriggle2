@@ -28,8 +28,6 @@ export default function PlayerControls({
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around', alignItems: 'center',
-        pt: 2,
-        pb: 2,
       }}>
       <IconButton
         onClick={() => skip('prev')}

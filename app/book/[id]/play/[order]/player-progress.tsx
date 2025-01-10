@@ -2,7 +2,23 @@
 import { Box, Slider, Typography } from "@mui/material";
 import { useState } from "react";
 
-export default function PlayerProgress({ position, setPosition, duration, totalLength, chapterTitle }: { position: number, setPosition: (position: number) => void, duration: number, totalLength: number, chapterTitle: string}) {
+export default function PlayerProgress({
+  position,
+  setPosition,
+  duration,
+  totalLength,
+  chapterTitle,
+  onSeekEnd,
+  onSeekStart,
+}: {
+  position: number,
+  setPosition: (position: number) => void,
+  duration: number,
+  totalLength: number,
+  chapterTitle: string,
+  onSeekEnd: () => void,
+  onSeekStart: () => void,
+}) {
   
   function formatDuration(value: number) {
     const minute = Math.floor(value / 60);
@@ -35,6 +51,10 @@ export default function PlayerProgress({ position, setPosition, duration, totalL
         step={1}
         max={duration}
         onChange={(_, value) => setPosition(value as number)}
+        onMouseDown={onSeekStart}
+        onMouseUp={onSeekEnd}
+        onTouchStart={onSeekStart}
+        onTouchEnd={onSeekEnd}
         sx={(t) => ({
           color: 'rgba(0,0,0,0.87)',
           height: 4,
