@@ -5,6 +5,7 @@ import Replay30Icon from '@mui/icons-material/Replay30';
 import Forward30Icon from '@mui/icons-material/Forward30';
 import PauseIcon from '@mui/icons-material/Pause';
 import { Box, IconButton } from '@mui/material';
+import { IBookData } from './media-player';
 
 
 export default function PlayerControls({
@@ -20,8 +21,6 @@ export default function PlayerControls({
     order: string,
     skip: (direction: 'prev' | 'next') => void,
   }) {
-
-  // const skip = () => console.log()
   
   return (
     <Box
