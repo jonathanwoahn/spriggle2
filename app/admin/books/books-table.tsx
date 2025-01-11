@@ -3,9 +3,14 @@ import { Box, Input, Paper, Table, TableBody, TableCell, TableContainer, TableHe
 import { useEffect, useState } from "react";
 import { format } from 'date-fns';
 import SearchIcon from '@mui/icons-material/Search';
+import { IBookData } from "@/lib/cashmere";
+import { useRouter } from "next/navigation";
 
 export default function BooksTable() {
-  const [books, setBooks] = useState<any[]>([]);
+  const router = useRouter();
+
+  
+  const [books, setBooks] = useState<IBookData[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [totalBooks, setTotalBooks] = useState(0);
@@ -55,6 +60,10 @@ export default function BooksTable() {
     {
       id: 'title',
       label: 'Title',
+      href: ``,
+      onClick: (row: IBookData) => {
+        router.push(`/book/${row.uuid}`);
+      }
     },
     {
       id: 'subtitle',
@@ -76,8 +85,9 @@ export default function BooksTable() {
     },
   ];
 
+  const handleRowClick = (book: IBookData) => {
 
-  
+  }
 
   return (
     <>
@@ -107,9 +117,11 @@ export default function BooksTable() {
             </TableHead>
             <TableBody>
               {books.map((book, idx) => (
-                <TableRow hover key={idx} sx={{cursor: 'pointer' }}>
+                <TableRow hover key={idx} sx={{ cursor: 'pointer' }}>
                   {columns.map((column, index) => (
-                    <TableCell key={index}>{column.render ? column.render(book.data[column.id]) : book.data[column.id]}</TableCell>
+                    <TableCell
+                      onClick={column.onClick ? () => column.onClick(book) : undefined}
+                      key={index}>{column.render ? column.render((book.data as Record<string, any>)[column.id]) : (book.data as Record<string, any>)[column.id]}</TableCell>
                   ))}
                   
                 </TableRow>

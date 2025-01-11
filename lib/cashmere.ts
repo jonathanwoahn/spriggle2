@@ -1,6 +1,12 @@
 import { IOmnibookData, Omnibook } from "omnibook";
 
-interface IBookData {
+export interface INav {
+  label: string;
+  order: number;
+}
+
+export interface IBookData {
+  cover_image: string;
   uuid: string;
   data: {
     title: string;
@@ -9,7 +15,7 @@ interface IBookData {
     creators: string[];
     creation_date: string;
     publisher: string;
-    // nav: INav[];
+    nav: INav[];
   };
 }
 
