@@ -49,7 +49,7 @@ export default function PlayerProgress({
         value={position}
         min={0}
         step={1}
-        max={duration}
+        max={duration || 0}
         onChange={(_, value) => setPosition(value as number)}
         onMouseDown={onSeekStart}
         onMouseUp={onSeekEnd}

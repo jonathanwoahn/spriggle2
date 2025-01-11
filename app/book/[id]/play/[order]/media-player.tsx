@@ -3,12 +3,18 @@
 import { Box, Card, CardActionArea, CardContent, CardHeader } from "@mui/material";
 import PlayerProgress from "./player-progress";
 import PlayerControls from "./player-controls";
-import PlayerCardActions from "./player-card-actions";
+import PlayerCardActions, { SPEEDS } from "./player-card-actions";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { AudioChapterManager } from './audio-manager';
 import BookCoverImage from "@/components/book-cover-image";
+
+declare global {
+  interface Document {
+    userInteracted?: boolean;
+  }
+}
 
 export interface INav {
   order: number;
@@ -33,60 +39,50 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [autoplay, setAutoplay] = useState(true);
+  const [speed, setSpeed] = useState<{value: number, label: string}>(SPEEDS[1]);
+  
   const isSeekingRef = useRef(false);
 
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
-  // const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
     audioManagerRef.current = new AudioChapterManager(new Audio());
 
     if(!audioManagerRef.current) return;
 
-    audioManagerRef.current.addEventListener('loadedmetadata', () => {
+    const handleLoadedmetadata = () => {
       if (!audioManagerRef.current) return;
 
       setDuration(audioManagerRef.current.duration);
-    });
+    }
 
-    audioManagerRef.current.addEventListener('timeupdate', () => {
+    const handleTimeupdate = () => {
       if (!isSeekingRef.current && !!audioManagerRef.current) {
         setPosition(audioManagerRef.current.currentTime);
       }
-    });
+    }
+
+    const handleEnded = () => {
+      if (!audioManagerRef.current) return;
+
+      const currentOrder = parseInt(params.order);
+      if(currentOrder + 1 < bookData.data.nav.length) {
+        handleSkip('next');
+      }
+    }
+
+    audioManagerRef.current.addEventListener('loadedmetadata', handleLoadedmetadata);
+    audioManagerRef.current.addEventListener('timeupdate', handleTimeupdate);
+    audioManagerRef.current.addEventListener('ended',handleEnded)
 
     return () => {
       if (!audioManagerRef.current) return;
 
-      audioManagerRef.current.removeEventListener('loadedmetadata', () => {
-        if (!audioManagerRef.current) return;
-
-        setDuration(audioManagerRef.current.duration);
-      });
-
-      audioManagerRef.current.removeEventListener('timeupdate', () => {
-        if (!isSeekingRef.current) {
-          if (!audioManagerRef.current) return;
-
-          setPosition(audioManagerRef.current.currentTime);
-        }
-      });
+      audioManagerRef.current.removeEventListener('loadedmetadata', handleLoadedmetadata);
+      audioManagerRef.current.removeEventListener('timeupdate', handleTimeupdate);
+      audioManagerRef.current.removeEventListener('ended',() => handleEnded);
     };
-    
-    // if(audioRef.current) {
-    //   audioManagerRef.current = new AudioChapterManager(audioRef.current);
-    //   audioRef.current.addEventListener('loadedmetadata', () => {
-    //     if (audioRef.current) {
-    //       setDuration(audioRef.current.duration);
-    //     }
-    //   });
-
-    //   audioRef.current.addEventListener('timeupdate', () => {
-    //     if (audioRef.current && !isSeekingRef.current) {
-    //       setPosition(audioRef.current.currentTime);
-    //     }
-    //   });    
-    // }
   }, []);
 
   useEffect(() => {
@@ -96,11 +92,27 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
       setIsLoading(true);
       await audioManagerRef.current.prepareChapter(params.id, parseInt(params.order));
       setIsLoading(false);
+
+      if(audioManagerRef.current && autoplay) {
+        audioManagerRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            // Autoplay is disabled by the browser unless a user has interacted, so it requires a click first before playing
+            // This is unavoidable and is a security feature of the browser
+          });
+      }
     };
 
     loadChapter();
   }, [params.id, params.order]);
 
+  useEffect(() => {
+    if(!audioManagerRef.current) return;
+    audioManagerRef.current.playbackRate(speed.value);
+  }, [speed])
+  
   const handlePlayPause = () => {
     if (!audioManagerRef.current) return;
     if(isPlaying) {
@@ -130,6 +142,11 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
     const newOrder = dir === 'prev' ? currentOrder - 1 : currentOrder + 1;
     
     if(newOrder < 0 || newOrder >= bookData.data.nav.length) return;
+    if(isPlaying) {
+      audioManagerRef.current?.pause();
+      setIsPlaying(false);
+    }
+
     router.push(`/book/${params.id}/play/${newOrder}`);
   }
 
@@ -157,8 +174,8 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
           chapterTitle={bookData.data.nav[parseInt(params.order)].label}
           onSeekStart={handleSeekStart}
         />
-        {/* <audio ref={audioRef} /> */}
         <PlayerControls
+          isLoading={isLoading}
           isPlaying={isPlaying}
           handlePlayPause={handlePlayPause}
           bookData={bookData}
@@ -166,7 +183,12 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
           skip={handleSkip}
         />
       </CardContent>
-      <PlayerCardActions bookData={bookData} />
+      <PlayerCardActions
+        speed={speed}
+        setSpeed={setSpeed}
+        autoplay={autoplay}
+        setAutoplay={setAutoplay}
+        bookData={bookData} />
     </Card>
   );
 }

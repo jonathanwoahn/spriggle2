@@ -4,7 +4,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Replay30Icon from '@mui/icons-material/Replay30';
 import Forward30Icon from '@mui/icons-material/Forward30';
 import PauseIcon from '@mui/icons-material/Pause';
-import { Box, IconButton } from '@mui/material';
+import { Box, CircularProgress, IconButton } from '@mui/material';
 import { IBookData } from './media-player';
 
 
@@ -14,12 +14,14 @@ export default function PlayerControls({
     bookData,
     order,
     skip,
+    isLoading,
   }: {
     isPlaying: boolean,
     handlePlayPause: () => void,
     bookData: IBookData,
     order: string,
     skip: (direction: 'prev' | 'next') => void,
+    isLoading: boolean,
   }) {
   
   return (
@@ -31,21 +33,27 @@ export default function PlayerControls({
       }}>
       <IconButton
         onClick={() => skip('prev')}
-        disabled={parseInt(order) === 0}>
+        disabled={parseInt(order) === 0 || isLoading}>
         <SkipPreviousIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
       {/* <IconButton>
         <Replay30Icon sx={{ fontSize: '2rem' }} />
       </IconButton> */}
-      <IconButton onClick={() => handlePlayPause()}>
-        {isPlaying ? <PauseIcon sx={{ fontSize: '4rem' }} /> : <PlayArrowIcon sx={{ fontSize: '4rem' }} />}
-      </IconButton>
+      <Box sx={{position: 'relative'}}>
+        <IconButton
+          disabled={isLoading}
+          onClick={() => handlePlayPause()}>
+          {isPlaying ? <PauseIcon sx={{ fontSize: '4rem' }} /> : <PlayArrowIcon sx={{ fontSize: '4rem' }} />}
+        </IconButton>
+        {isLoading && <CircularProgress
+          sx={{position: 'absolute', left: 0, opacity: '50%'}} size={80} color="secondary" />}
+      </Box>
       {/* <IconButton>
         <Forward30Icon sx={{ fontSize: '2rem' }} />
       </IconButton> */}
       <IconButton
         onClick={() => skip('next')}
-        disabled={parseInt(order) === bookData.data.nav.length - 1}>
+        disabled={parseInt(order) === bookData.data.nav.length - 1 || isLoading}>
         <SkipNextIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
     </Box>

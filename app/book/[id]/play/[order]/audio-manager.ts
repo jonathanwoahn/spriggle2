@@ -11,35 +11,20 @@ export class AudioChapterManager {
     this.audioElement.preload = 'auto';
   }
 
-  play() {
-    this.audioElement.play();
+  play(): Promise<void> {
+    return this.audioElement.play();
   }
 
-  pause() {
-    this.audioElement.pause();
+  pause(): void {
+    return this.audioElement.pause();
   }
 
   seek(position: number) {
-    // let totalBuffered = 0;
-    // for (let i = 0; i < this.audioElement.buffered.length; i++) {
-    //   totalBuffered += this.audioElement.buffered.end(i) - this.audioElement.buffered.start(i);
-    // }
-
     this.audioElement.currentTime = position;
-    
-    // if (this.audioElement.readyState >= 1) { // HAVE_METADATA or higher
-    //   console.log('audioElement.currentTime after seek: ', this.audioElement.currentTime);
-    // } else {
-    //   console.warn('Audio element is not ready to seek');
-    //   this.audioElement.addEventListener('canplay', () => {
-    //     this.audioElement.currentTime = position;
-    //     console.log('audioElement.currentTime after seek (canplay): ', this.audioElement.currentTime);
-    //   }, { once: true });
+  }
 
-    //   this.audioElement.addEventListener('canplaythrough', () => {
-    //     console.log('Audio element can play through');
-    //   }, { once: true });
-    // }
+  playbackRate(speed: number) {
+    this.audioElement.playbackRate = speed;
   }
 
   addEventListener(event: string, handler: EventListener) {
