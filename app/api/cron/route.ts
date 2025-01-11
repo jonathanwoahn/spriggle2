@@ -62,6 +62,7 @@ export const GET = async (req: NextRequest) => {
     .from('jobs')
     .select('*')
     .eq('status', 'pending')
+    .eq('type', 'text')
     .limit(MAX_CONCURRENT_JOBS);
 
   if (error) {

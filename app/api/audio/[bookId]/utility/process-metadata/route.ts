@@ -28,7 +28,7 @@ export const POST = async (
   }
 
   for (let i = 0; i < (book.data.nav || []).length; i++) {
-    const blocks = (await cash.getSectionBookBlocks(bookId, `${i}`)).filter((block: any) => block.type === 'text' || block.type === 'section');
+    const blocks = (await cash.getSectionBookBlocks(bookId, `${i}`)).filter((block: any) => block.type === 'text');
     const {data: metadata, error: metadataError} = await sb.from('audio_metadata').select('*').eq('book_id', bookId).eq('section_order', book.data.nav[i].order);
     let startTime = 0;
 
