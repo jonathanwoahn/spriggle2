@@ -238,6 +238,21 @@ export default function BooksTable() {
 
     setIsProcessing(false);
   }
+
+  const generateEmbeddings = async (ids: string[]) => {
+    setIsProcessing(true);
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        await fetch(`/api/audio/${ids[i]}/utility/generate-embedding`, { method: 'POST' });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        console.log(`Jobs generated for book ${ids[i]}`);
+      }
+    }
+
+    setIsProcessing(false);
+  }
   
   const handleMenuClick = (action: string) => {
     handleClose();
@@ -259,11 +274,8 @@ export default function BooksTable() {
       case 'generate_book_summary':
         generateBookSummary(selected);
         break;
-      // case 'generate_book_overview':
-      //   console.log('generate_book_overview');
-      //   break;
       case 'generate_embedding':
-        console.log('generate_embedding');
+        generateEmbeddings(selected);
         break;
     }
 

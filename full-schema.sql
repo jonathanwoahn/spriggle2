@@ -202,7 +202,7 @@ create table public.collections (
 create table public.collection_books (
   id serial primary key,
   collection_id integer references public.collections(id) not null,
-  book_id varchar(30) not null,
+  book_id varchar(32) not null,
   created_at timestamp not null default now()
 );
 
@@ -210,8 +210,14 @@ create table public.collection_books (
 
 -- make an enum of 'text', 'section' and 'book' for the type column.
 
+
+
+
+
+
 DROP TYPE IF EXISTS public.block_metadata_type;
 CREATE TYPE public.block_metadata_type as enum ('text', 'section', 'book');
+CREATE EXTENSION IF NOT EXISTS vector;
 
 
 drop table if exists public.block_metadata;
@@ -223,7 +229,31 @@ create table public.block_metadata (
   block_index integer not null,
   type block_metadata_type not null,
   data jsonb not null,
+  embedding vector(1536),
   created_at timestamp not null default now(),
   updated_at timestamp not null default now(),
   unique (book_id, block_id)
 );
+
+create or replace function match_documents (
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int
+)
+returns table(id integer, book_id varchar, block_id varchar, data jsonb, section_order integer, block_index integer, type public.block_metadata_type, similarity float)
+language sql
+as $$
+  select 
+    bm.id,
+    bm.book_id,
+    bm.block_id,
+    bm.data,
+    bm.section_order,
+    bm.block_index,
+    bm.type,
+    (1 - (bm.embedding <=> query_embedding))::float as similarity
+  from block_metadata bm
+  where bm.embedding <=> query_embedding < 1 - match_threshold
+  order by bm.embedding <=> query_embedding asc
+  limit least(match_count, 200);
+$$;

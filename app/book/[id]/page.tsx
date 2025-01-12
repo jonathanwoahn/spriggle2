@@ -27,6 +27,25 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     return <div>Book not found</div>;
   }  
 
+  const blockResponse = await fetch(`${defaultUrl}/api/block-metadata/${bookData.uuid}`);
+  const blockData = await blockResponse.json();
+  console.log(blockData);
+  
+  
+  function formatDuration2(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const parts: string[] = [];
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (secs > 0 || parts.length === 0) parts.push(`${Math.trunc(secs)}s`);
+
+    return parts.join(' ');
+  }
+
+
   const carouselSettings: Partial<IBookCarousel> = {
     slidesToShow: 3,
     responsive: [
@@ -60,7 +79,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
                     <Typography variant="h5" component="h5">{bookData.data.title}</Typography>
                     <Typography variant="body2" component="p">By {bookData.data.creators.join(', ')}</Typography>
-                    <Typography variant="body2" component="p">Length of audiobook</Typography>
+                    <Typography variant="body2" component="p">{formatDuration2(blockData.data.duration / 1000)}</Typography>
 
                   </Box>
                 </Grid>
@@ -76,8 +95,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <Typography variant="h4" component="h4">Summary</Typography>
-          Insert generated summary here
-          {/* <Typography variant="body1" component="p">
+          <Typography variant="body1" component="p">
             “Charlotte’s Web” is a timeless classic that tells the heartwarming story of a young pig named Wilbur and his unlikely friendship with Charlotte, a wise and gentle spider. When Wilbur is faced with the grim prospect of being slaughtered, Charlotte devises a plan to save his life. She spins extraordinary webs with words like “Some Pig” and “Terrific,” turning Wilbur into a local celebrity and ensuring his safety.
           </Typography>
           <Typography variant="body1" component="p">
@@ -108,7 +126,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           </Typography>
           <Typography variant="body1" component="p">
             This story is a celebration of the extraordinary found in the ordinary, reminding readers of the beauty of kindness and the importance of standing up for those we care about.
-          </Typography> */}
+          </Typography>
         </Box>
         <BookCollectionChips bookId={id} />
         <Box sx={{ p: 2 }}>
