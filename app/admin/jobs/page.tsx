@@ -12,7 +12,6 @@ export default function AdminJobsPage() {
         flexDirection: 'column',
         justifyContent: 'start',
       }}>
-      <Typography variant="h4" sx={{ pl: 2, pt: 2 }}>Conversion Jobs</Typography>
       <JobsTable />
     </Box>    
   );

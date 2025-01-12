@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 
-
 const MAX_RETRIES = 3;
 
 async function downloadWithRetry(sb: any, bookId: string, blockId: string, filePath: string, retries: number = MAX_RETRIES): Promise<void> {
@@ -60,10 +59,11 @@ export const POST = async (
   
   // Retrieve all of the metadata files for the audio
   const { data: metadata, error: metadataError } = await sb
-    .from('audio_metadata')
+    .from('block_metadata')
     .select('*')
     .eq('book_id', bookId)
     .eq('section_order', order)
+    .eq('type', 'text')
     .order('block_index', { ascending: true });
 
   if(metadataError) {

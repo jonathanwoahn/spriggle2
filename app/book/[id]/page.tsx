@@ -9,6 +9,7 @@ import GenerateAudioButton from "./generate-audio-button";
 import ProcessJobsButton from "./process-jobs-button";
 import { IBookData } from "./play/[order]/media-player";
 import BookCoverImage from "@/components/book-cover-image";
+import BookCollectionChips from "./book-collection-chips";
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -25,14 +26,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
   if (!bookData) {
     return <div>Book not found</div>;
   }  
-
-  const labels = [
-    "Friendship",
-    "Animal Stories",
-    "Classic Children's Literature",
-    "Farm Life",
-    "Selflessness and Sacrifice",
-  ];
 
   const carouselSettings: Partial<IBookCarousel> = {
     slidesToShow: 3,
@@ -51,8 +44,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
       },
     ],
   };
-  
-  
   return (
     <>
       <Box sx={{ width: '100%', maxWidth: '840px', marginLeft: 'auto', marginRight: 'auto', }}>
@@ -79,16 +70,14 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play/0`}>Play</Button>
                 <ChaptersButton bookData={bookData} />
-                {/* this is a temporary button. remove once this can be run from the admin page */}
-                <GenerateAudioButton id={id} />
-                <ProcessJobsButton />
               </Box>
             </Grid>
           </Grid>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <Typography variant="h4" component="h4">Summary</Typography>
-          <Typography variant="body1" component="p">
+          Insert generated summary here
+          {/* <Typography variant="body1" component="p">
             “Charlotte’s Web” is a timeless classic that tells the heartwarming story of a young pig named Wilbur and his unlikely friendship with Charlotte, a wise and gentle spider. When Wilbur is faced with the grim prospect of being slaughtered, Charlotte devises a plan to save his life. She spins extraordinary webs with words like “Some Pig” and “Terrific,” turning Wilbur into a local celebrity and ensuring his safety.
           </Typography>
           <Typography variant="body1" component="p">
@@ -119,23 +108,9 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           </Typography>
           <Typography variant="body1" component="p">
             This story is a celebration of the extraordinary found in the ordinary, reminding readers of the beauty of kindness and the importance of standing up for those we care about.
-          </Typography>
+          </Typography> */}
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            width: '100%',
-            p: 2,
-            overflowX: 'scroll',
-            overflow: 'hidden',
-            gap: 1,
-          }}>
-          {labels.map((label, idx) => (
-            <Chip label={label} key={idx}></Chip>
-          ))}
-        </Box>
+        <BookCollectionChips bookId={id} />
         <Box sx={{ p: 2 }}>
           <BookCarousel {...carouselSettings} />
 

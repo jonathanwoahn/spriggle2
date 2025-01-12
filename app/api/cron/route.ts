@@ -62,7 +62,6 @@ export const GET = async (req: NextRequest) => {
     .from('jobs')
     .select('*')
     .eq('status', 'pending')
-    .eq('type', 'text')
     .limit(MAX_CONCURRENT_JOBS);
 
   if (error) {
@@ -95,6 +94,7 @@ export const GET = async (req: NextRequest) => {
         .from(AUDIO_BUCKET)
         .upload(`${job.data.omnibookId}/${job.data.bookBlockId}.mp3`, buffer, {
           contentType: 'audio/mpeg',
+          upsert: true,
         });      
 
       if(storageError) {
@@ -108,15 +108,18 @@ export const GET = async (req: NextRequest) => {
         if(!duration || duration === 0) {
           throw new Error('Failed to get audio duration');
         }
-  
+
         // store metadata in the audio_metadata table
-        const { data, error: metadataError } = await supabase.from('audio_metadata')
+        const { data, error: metadataError } = await supabase.from('block_metadata')
           .insert({
             book_id: job.data.omnibookId,
             block_id: job.data.bookBlockId,
             section_order: job.data.section_order,
             block_index: job.data.index,
-            duration,
+            type: job.type,
+            data: {
+              duration,
+            },
           });
   
         if(metadataError) {

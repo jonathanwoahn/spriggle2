@@ -1,8 +1,8 @@
 'use client';
 import { createClient } from "@/utils/supabase/client";
-import { Box, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
+import { Box, Button, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 
 export default function JobsTable() {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -13,6 +13,8 @@ export default function JobsTable() {
   const [orderBy, setOrderBy] = useState<string>('id');
   const [filters, setFilters] = useState<{ [key: string]: string }>({});
   const [selectedTab, setSelectedTab] = useState('failed');
+
+  const [processing, setProcessing] = useState(false);
 
 
   useEffect(() => {
@@ -46,9 +48,28 @@ export default function JobsTable() {
     setSelectedTab(newValue);
     setPage(0);
   };
+
+  const handleClick = async () => {
+    setProcessing(true);
+    await fetch(`/api/cron`);
+    setProcessing(false);
+  }
+
+  const resetFailedJobs = async () => {
+    setProcessing(true);
+    await fetch(`/api/jobs/reset-failed-jobs`, { method: 'POST' });
+    setProcessing(false);
+  }
   
   return (
     <>
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+        <Typography variant="h4" >Conversion Jobs</Typography>
+        <Box sx={{display: 'flex', flexDirection: 'row', gap: 2}}>
+          <Button color="warning" onClick={resetFailedJobs} disabled={processing}>Reset Failed Jobs</Button>
+          <Button variant="contained" onClick={handleClick} disabled={processing}>Process Pending Jobs</Button>
+        </Box>
+      </Box>
       <Tabs value={selectedTab} onChange={handleTabChange}>
         <Tab label="Failed" value="failed" />
         <Tab label="Pending" value="pending" />

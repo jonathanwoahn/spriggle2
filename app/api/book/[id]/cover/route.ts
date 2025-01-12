@@ -1,5 +1,4 @@
 import Cashmere from "@/lib/cashmere";
-import { NextApiRequest } from "next";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (

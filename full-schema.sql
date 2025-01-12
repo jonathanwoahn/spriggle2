@@ -208,14 +208,21 @@ create table public.collection_books (
 
 -- build a table that holds audio file metadata. it should include things like book_id, block_id, duration, start_time, section order number, and sequence number
 
-create table public.audio_metadata (
+-- make an enum of 'text', 'section' and 'book' for the type column.
+
+DROP TYPE IF EXISTS public.block_metadata_type;
+CREATE TYPE public.block_metadata_type as enum ('text', 'section', 'book');
+
+
+drop table if exists public.block_metadata;
+create table public.block_metadata (
   id serial primary key,
   book_id varchar(32) not null,
   block_id varchar(32) not null,
-  duration integer not null,
-  start_time integer,
-  section_order integer not null,
+  section_order integer,
   block_index integer not null,
+  type block_metadata_type not null,
+  data jsonb not null,
   created_at timestamp not null default now(),
   updated_at timestamp not null default now(),
   unique (book_id, block_id)

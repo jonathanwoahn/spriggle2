@@ -2,8 +2,6 @@ import { Box } from "@mui/material";
 import Image from "next/image";
 
 export default function BookCoverImage({bookId, alt, height = 250}: {bookId: string, alt?: string, height?: number}) {
-  const width = `${height / (4/3)}px`;
-  
   return (
     <Box sx={{
       position: 'relative',
@@ -18,7 +16,7 @@ export default function BookCoverImage({bookId, alt, height = 250}: {bookId: str
       alt={alt || 'Book Cover'}
       width={0}
       height={0}
-      sizes="100vw"
+      sizes={`${height}`}
       style={{width: 'auto', height: '100%'}}
       />
     </Box>
