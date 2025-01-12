@@ -5,7 +5,6 @@ import PlayerProgress from "./player-progress";
 import PlayerControls from "./player-controls";
 import PlayerCardActions, { SPEEDS } from "./player-card-actions";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { AudioChapterManager } from './audio-manager';
 import BookCoverImage from "@/components/book-cover-image";
@@ -106,6 +105,13 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
     };
 
     loadChapter();
+
+    return () => {
+      if(audioManagerRef.current) {
+        audioManagerRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
   }, [params.id, params.order]);
 
   useEffect(() => {

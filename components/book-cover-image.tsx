@@ -12,12 +12,13 @@ export default function BookCoverImage({bookId, alt, height = 250}: {bookId: str
       width: 'auto', // Set width to auto to adjust based on the image
     }}>
       <Image
-      src={`/api/book/${bookId}/cover`}
-      alt={alt || 'Book Cover'}
-      width={0}
-      height={0}
-      sizes={`${height}`}
-      style={{width: 'auto', height: '100%'}}
+        src={`/api/book/${bookId}/cover`}
+        alt={alt || 'Book Cover'}
+        width={0}
+        height={0}
+        sizes={`${height}`}
+        style={{width: 'auto', height: '100%'}}
+        priority={true}
       />
     </Box>
   );

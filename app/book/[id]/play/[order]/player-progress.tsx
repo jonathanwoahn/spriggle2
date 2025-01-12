@@ -1,4 +1,5 @@
 'use client';
+import { formatDuration } from "@/lib/utils";
 import { Box, Slider, Typography } from "@mui/material";
 
 
@@ -33,12 +34,6 @@ export default function PlayerProgress({
   onSeekEnd: () => void,
   onSeekStart: () => void,
 }) {
-  
-  function formatDuration(value: number) {
-    const minute = Math.floor(value / 60);
-    const secondLeft = Math.trunc(value - minute * 60);
-    return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
-  }
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: 2, pb: 2, }}>

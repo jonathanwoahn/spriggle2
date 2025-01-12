@@ -1,15 +1,16 @@
 import BookCarousel, { IBookCarousel } from "@/components/book-carousel";
-import { Box, Button, Chip, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
-import Image from "next/image";
-import GenerateAudioButton from "./generate-audio-button";
-import ProcessJobsButton from "./process-jobs-button";
 import { IBookData } from "./play/[order]/media-player";
 import BookCoverImage from "@/components/book-cover-image";
 import BookCollectionChips from "./book-collection-chips";
+import MuiMarkdown from "mui-markdown";
+import { formatDuration2 } from "@/lib/utils";
+
+
 
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
@@ -27,23 +28,10 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     return <div>Book not found</div>;
   }  
 
-  const blockResponse = await fetch(`${defaultUrl}/api/block-metadata/${bookData.uuid}`);
-  const blockData = await blockResponse.json();
-  console.log(blockData);
+  const blockResponse = await fetch(`${defaultUrl}/api/block-metadata/${bookData.uuid}/book`);
+  const blockData = (await blockResponse.json())[0];
   
   
-  function formatDuration2(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    const parts: string[] = [];
-    if (hours > 0) parts.push(`${hours}h`);
-    if (minutes > 0) parts.push(`${minutes}m`);
-    if (secs > 0 || parts.length === 0) parts.push(`${Math.trunc(secs)}s`);
-
-    return parts.join(' ');
-  }
 
 
   const carouselSettings: Partial<IBookCarousel> = {
@@ -79,7 +67,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
                     <Typography variant="h5" component="h5">{bookData.data.title}</Typography>
                     <Typography variant="body2" component="p">By {bookData.data.creators.join(', ')}</Typography>
-                    <Typography variant="body2" component="p">{formatDuration2(blockData.data.duration / 1000)}</Typography>
+                    <Typography variant="body2" component="p">{formatDuration2(blockData?.data.duration / 1000)}</Typography>
 
                   </Box>
                 </Grid>
@@ -94,44 +82,48 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           </Grid>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
-          <Typography variant="h4" component="h4">Summary</Typography>
-          <Typography variant="body1" component="p">
-            “Charlotte’s Web” is a timeless classic that tells the heartwarming story of a young pig named Wilbur and his unlikely friendship with Charlotte, a wise and gentle spider. When Wilbur is faced with the grim prospect of being slaughtered, Charlotte devises a plan to save his life. She spins extraordinary webs with words like “Some Pig” and “Terrific,” turning Wilbur into a local celebrity and ensuring his safety.
-          </Typography>
-          <Typography variant="body1" component="p">
-            Set on a small farm, the story explores themes of friendship, loyalty, and the cycle of life. With its richly drawn characters, including Fern, the compassionate girl who first saves Wilbur, and the lovable but self-centered rat, Templeton, Charlotte’s Web is a poignant tale that has touched the hearts of generations.
-          </Typography>
-          <Typography variant="h5" component="h5">
-            Key Highlights
-          </Typography>
-          <Box component="ul" sx={{ display: 'flex', gap: 1, flexDirection: 'column', }}>
-            <Typography variant="body1" component="li">
-              A beloved story about the power of friendship and selflessness.
-            </Typography>
-            <Typography variant="body1" component="li">
-              Beautifully illustrated by Garth Williams, adding charm to the narrative.
-            </Typography>
-            <Typography variant="body1" component="li">
-              Winner of the Newbery Honor and other literary accolades.
-            </Typography>
-            <Typography variant="body1" component="li">
-              Frequently included in school curriculums as a classic work of children’s literature.
-            </Typography>
-          </Box>
-          <Typography variant="h5" component="h5">
-            Why It's Special
-          </Typography>
-          <Typography variant="body1" component="p">
-            Charlotte’s Web is a masterful blend of humor, heart, and profound life lessons, making it a must-read for children and adults alike. Its enduring appeal lies in its ability to tackle deep themes in a way that is accessible to young readers.
-          </Typography>
-          <Typography variant="body1" component="p">
-            This story is a celebration of the extraordinary found in the ordinary, reminding readers of the beauty of kindness and the importance of standing up for those we care about.
-          </Typography>
+          <MuiMarkdown
+            overrides={{
+              h3: {
+                component: Typography,
+                props: {
+                  variant: 'h4',
+                  sx: {
+                    mb: 2,
+                  },
+                },
+              },
+              h4: {
+                component: Typography,
+                props: {
+                  variant: 'h5',
+                  sx: {
+                    mb: 1,
+                  },
+                },
+              },
+              h5: {
+                component: Typography,
+                props: {
+                  variant: 'h6',
+                },
+              },
+              p: {
+                component: Typography,
+                props: {
+                  variant: 'body1',
+                  paragraph: true,
+                },
+              },
+            }}
+          >
+            {blockData?.data.summary}
+          </MuiMarkdown>
+
         </Box>
         <BookCollectionChips bookId={id} />
         <Box sx={{ p: 2 }}>
           <BookCarousel {...carouselSettings} />
-
         </Box>
       </Box>
       <Footer />
