@@ -3,9 +3,7 @@
 import { AppBar, Drawer, IconButton, List, ListItemButton, Toolbar, Typography } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { IBookData } from "./play/[order]/media-player";
-import ChapterLength from "./chapter-length";
 import { useEffect, useState } from "react";
-import { INav } from "@/lib/cashmere";
 import { formatDuration } from "@/lib/utils";
 
 export default function ChapterDrawer({isOpen, setIsOpen, bookData}: {isOpen: boolean, setIsOpen: (isOpen: boolean) => void, bookData: IBookData}) {

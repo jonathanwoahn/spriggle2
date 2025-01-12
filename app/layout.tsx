@@ -5,15 +5,15 @@ import { Box, CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
 import { MenuProvider } from "@/context/admin-menu-context";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+// const defaultUrl = process.env.VERCEL_URL
+//   ? `https://${process.env.VERCEL_URL}`
+//   : "http://localhost:3000";
 
-export const metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Spriggle | AI Powered Audiobooks for Kids",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
+// export const metadata = {
+//   metadataBase: new URL(defaultUrl),
+//   title: "Spriggle | AI Powered Audiobooks for Kids",
+//   description: "The fastest way to build apps with Next.js and Supabase",
+// };
 
 const geistSans = Geist({
   display: "swap",
