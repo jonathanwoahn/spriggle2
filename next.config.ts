@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'booktalk-media.nyc3.cdn.digitaloceanspaces.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'omnibk.ai',
+      },
     ],
   },
   /* config options here */
