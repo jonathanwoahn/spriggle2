@@ -4,6 +4,10 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
+
+
+
+
 export default async function PlayBookPage({ params }: { params: Promise<{ id: string, order: string }> }) {
   const supabase = await createClient();
   const { data: { user }, } = await supabase.auth.getUser();

@@ -118,6 +118,27 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
     if(!audioManagerRef.current) return;
     audioManagerRef.current.playbackRate(speed.value);
   }, [speed])
+
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: bookData.data.title,
+        artist: bookData.data.creators.join(', '),
+        album: bookData.data.nav[parseInt(params.order)].label,
+        artwork: [
+          { src: `https://omnibk.ai/api/v1/book/${bookData.uuid}/cover_image`}
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', handlePlayPause);
+      navigator.mediaSession.setActionHandler('pause', handlePlayPause);
+      navigator.mediaSession.setActionHandler('seekbackward', () => handleSeek(position - 10));
+      navigator.mediaSession.setActionHandler('seekforward', () => handleSeek(position + 10));
+      navigator.mediaSession.setActionHandler('previoustrack', () => handleSkip('prev'));
+      navigator.mediaSession.setActionHandler('nexttrack', () => handleSkip('next'));
+    }
+  }, [bookData, params.order]);  
+  
   
   const handlePlayPause = () => {
     if (!audioManagerRef.current) return;
