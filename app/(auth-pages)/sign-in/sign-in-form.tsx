@@ -8,9 +8,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { MouseEvent, MouseEventHandler, useState } from "react";
 
-export const metadata: Metadata = {
-  title: 'Sign In'
-};
+// export const metadata: Metadata = {
+//   title: 'Sign In'
+// };
 
 export default function SignInForm({message}: {message?: Message}) {
   const [formData, setFormData] = useState({

@@ -12,7 +12,6 @@ export default function BookCoverImage({bookId, alt, height = 250}: {bookId: str
       width: 'auto', // Set width to auto to adjust based on the image
     }}>
       <Image
-        // src={`/api/book/${bookId}/cover`}
         src={`https://omnibk.ai/api/v1/book/${bookId}/cover_image`}
         alt={alt || 'Book Cover'}
         width={0}

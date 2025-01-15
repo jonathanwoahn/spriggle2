@@ -3,9 +3,9 @@ import { FormMessage, Message } from "@/components/form-message";
 import SignUpForm from "./sign-up-form";
 import { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: 'Sign Up'
-};
+// export const metadata: Metadata = {
+//   title: 'Sign Up'
+// };
 
 export default async function Signup(props: {
   searchParams: Promise<Message>;

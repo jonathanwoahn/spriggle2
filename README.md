@@ -1,17 +1,9 @@
 # TODO (prioritized)
 
 ## MVP
-- [X] add ability for admin to modify the settings (set OpenAI API Key, Cashmere API Key)
-- [X] modify server to use Cashmere API key from the database on API calls
-- [ ] add ability for admin to view all cashmere collections and omnibooks their API key has access to in admin
-- [ ] install Omnibook library, integrate with cashmere service for retrieving data
-- [ ] build entire omnibook --> audio conversion flow. Select omnibook(s) in table-->generate audio
-- [ ] add user roles (regular user, admin)
-- [ ] make admin menu icon only show up for admin users
-- [X] protect the admin routes to ensure only admins can access them (implemented lazy solution, set it to only accept single first user as admin for now)
-- [ ] add ability for admin to trigger audio transcription jobs
-- [ ] connect FE interface to play generated audio files
-- [ ] track consumption of audio content, handle reporting back to cashmere
+- [ ] Enable Media Session API to provide feedback to users on the media session (cover iamge, book title, chapter)
+- [ ] Build worker that runs in the background of user's browser, processing and advancing jobs automatically for the admin while they have the application open / worker enabled
+- [ ] implement service worker to handle processing of books. Add jobs to job queue, allow service worker to look for jobs it can process. make jobs as atomic as possible. create job plan that the worker can check against and make sure that all data is ready before each step.
 
 ## Nice to Haves
 - [ ] add ability for admin to give other users admin user role
@@ -26,6 +18,15 @@
 - [ ] add social sign in (i.e. Google Auth)
 - [ ] modify hero section to change once a user is logged in
 - [ ] clean up all unused code
+
+# COMPLETED
+- [X] add ability for admin to modify the settings (set OpenAI API Key, Cashmere API Key)
+- [X] modify server to use Cashmere API key from the database on API calls
+- [X] build entire omnibook --> audio conversion flow. Select omnibook(s) in table-->generate audio
+- [X] make admin menu icon only show up for admin users
+- [X] protect the admin routes to ensure only admins can access them (implemented lazy solution, set it to only accept single first user as admin for now)
+- [X] add ability for admin to trigger audio transcription jobs
+- [X] connect FE interface to play generated audio files
 
 
 
@@ -47,3 +48,5 @@ I think i'm also going to set up a "Setup" page / route that will load by defaul
 
 # NOTES FOR AUDIENCE
 - This default project uses the lowest quality voice generation of OpenAI TTS. If you'd like to generate higher quality audio, the main limitation you're going to run into is Vercel API functions. They have limited memory and runtime, and so the larger audio files that you work with, the higher probability that Vercel will fail when you try to conver the audio or stitch audio files together. So you'd like want to set up an external endpoint to handle the processing that has more CPU power and memory.
+- This project uses browser service workers to handle processing a lot of the audio conversion, due to the limited RAM and run time associated with vercel endpoints. The free plan typically only allows for jobs that are <60s and and consume minimal RAM. By using your browser to offload the processing of this data, it allows you to use the free tier of Vercel as long as you'd like. Just know it's a bit slower and requires you to keep your browser open.
+- 
