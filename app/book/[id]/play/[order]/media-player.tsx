@@ -137,7 +137,7 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
       navigator.mediaSession.setActionHandler('previoustrack', () => handleSkip('prev'));
       navigator.mediaSession.setActionHandler('nexttrack', () => handleSkip('next'));
     }
-  }, [bookData, params.order]);  
+  }, [bookData, params.order, position]);
   
   
   const handlePlayPause = () => {

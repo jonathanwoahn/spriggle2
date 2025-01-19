@@ -73,6 +73,7 @@ export default function JobsTable() {
       <Tabs value={selectedTab} onChange={handleTabChange}>
         <Tab label="Failed" value="failed" />
         <Tab label="Pending" value="pending" />
+        <Tab label="Waiting" value="waiting" />
         <Tab label="Processing" value="processing" />
         <Tab label="Completed" value="completed" />
       </Tabs>
@@ -111,9 +112,9 @@ export default function JobsTable() {
                 </TableCell>                
                 <TableCell>
                   <TableSortLabel
-                    active={orderBy === 'type'}
-                    direction={orderBy === 'type' ? order : 'asc'}
-                    onClick={() => handleRequestSort('type')}
+                    active={orderBy === 'job_type'}
+                    direction={orderBy === 'job_type' ? order : 'asc'}
+                    onClick={() => handleRequestSort('job_type')}
                   >
                     Type
                   </TableSortLabel>
@@ -128,7 +129,7 @@ export default function JobsTable() {
                   <TableCell>{format(new Date(job.created_at), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
                   <TableCell>{job.id}</TableCell>
                   <TableCell>{job.status}</TableCell>
-                  <TableCell>{job.type}</TableCell>
+                  <TableCell>{job.job_type}</TableCell>
                   <TableCell sx={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{JSON.stringify(job.data)}</TableCell>
                   <TableCell>{JSON.stringify(job.log)}</TableCell>
                 </TableRow>

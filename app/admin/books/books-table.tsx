@@ -21,6 +21,7 @@ export default function BooksTable() {
   const [selected, setSelected] = useState<string[]>([]);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -88,10 +89,6 @@ export default function BooksTable() {
       render: (val: string) => format(new Date(val), 'yyyy-MM-dd'),
     },
   ];
-
-  const handleRowClick = (book: IBookData) => {
-
-  }
 
   const handleSelectClick = (bookId: string) => {
     const uuid = books.find((book) => book.uuid === bookId)?.uuid;
@@ -177,6 +174,10 @@ export default function BooksTable() {
       value: 'generate_embedding',
       label: 'Generate Embedding',
     },
+    {
+      value: 'add_to_collections',
+      label: 'Add to Collections',
+    },
   ];
 
   const generateJobs = async (ids: string[]) => {
@@ -253,6 +254,9 @@ export default function BooksTable() {
 
     setIsProcessing(false);
   }
+
+  // const addToCollections = 
+  
   
   const handleMenuClick = (action: string) => {
     handleClose();
@@ -277,6 +281,8 @@ export default function BooksTable() {
       case 'generate_embedding':
         generateEmbeddings(selected);
         break;
+      case 'add_to_collections':
+        // addToCollections(selected);
     }
 
     setSelected([]);

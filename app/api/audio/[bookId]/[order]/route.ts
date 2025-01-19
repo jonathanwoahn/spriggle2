@@ -2,6 +2,8 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { PassThrough } from 'stream';
 
+// this is the endpoint that streams audio to the client
+
 export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ bookId: string, order: string }> }

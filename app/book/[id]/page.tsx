@@ -9,6 +9,7 @@ import BookCoverImage from "@/components/book-cover-image";
 import BookCollectionChips from "./book-collection-chips";
 import MuiMarkdown from "mui-markdown";
 import { formatDuration2 } from "@/lib/utils";
+import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
 
 
 
@@ -81,6 +82,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             </Grid>
           </Grid>
         </Box>
+        <BookIngestionStatus bookId={id} />
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <MuiMarkdown
             overrides={{
@@ -119,7 +121,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
           >
             {blockData?.data.summary}
           </MuiMarkdown>
-
         </Box>
         <BookCollectionChips bookId={id} />
         <Box sx={{ p: 2 }}>

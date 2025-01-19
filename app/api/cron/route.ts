@@ -1,39 +1,39 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { IBlockJobs } from "../book/[id]/tts/route";
 import OpenAI from 'openai';
 import * as mm from 'music-metadata';
+import { ensureBucketExists } from "../jobs/execute/helpers";
 
 const MAX_CONCURRENT_JOBS = 100;
 const AUDIO_BUCKET = 'audio';
 
 type Any = any;
 
-const ensureBucketExists = async (supabase: any, bucketName: string) => {
-  // List all buckets
-  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+// export const ensureBucketExists = async (supabase: any, bucketName: string) => {
+//   // List all buckets
+//   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
 
-  if (listError) {
-    console.error('Error listing buckets:', listError.message);
-    return;
-  }
+//   if (listError) {
+//     console.error('Error listing buckets:', listError.message);
+//     return;
+//   }
 
-  // Check if the bucket already exists
-  const bucketExists = buckets.some((bucket: Any) => bucket.name === bucketName);
+//   // Check if the bucket already exists
+//   const bucketExists = buckets.some((bucket: Any) => bucket.name === bucketName);
 
-  if (!bucketExists) {
-    // Create the bucket if it doesn't exist
-    const { data: createData, error: createError } = await supabase.storage.createBucket(bucketName);
+//   if (!bucketExists) {
+//     // Create the bucket if it doesn't exist
+//     const { data: createData, error: createError } = await supabase.storage.createBucket(bucketName);
 
-    if (createError) {
-      console.error('Error creating bucket:', createError.message);
-    } else {
-      console.log('Bucket created successfully:', createData);
-    }
-  } else {
-    console.log('Bucket already exists:', bucketName);
-  }
-}
+//     if (createError) {
+//       console.error('Error creating bucket:', createError.message);
+//     } else {
+//       console.log('Bucket created successfully:', createData);
+//     }
+//   } else {
+//     console.log('Bucket already exists:', bucketName);
+//   }
+// }
 
 export const GET = async (req: NextRequest) => {
   console.log('CRON JOB');

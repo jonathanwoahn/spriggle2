@@ -4,6 +4,7 @@ import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Cashmere from "@/lib/cashmere";
 
 export const signUpAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email")?.toString();
@@ -144,7 +145,6 @@ export interface ISetting {
   order: number;
 }
 
-
 export const saveSettings = async (settings: ISetting[]) => {
   const defaultUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -160,3 +160,106 @@ export const saveSettings = async (settings: ISetting[]) => {
   })
 }
 
+export const getJobCount = async ({bookId }: { bookId: string }) => {
+  const defaultUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+
+  // get the cashmere api key
+  const response = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const { value } = await response.json();
+
+  const cash = new Cashmere(value);
+
+  const allBlocks = await cash.getAllBookBlocks(bookId);
+  const coreBlocks = allBlocks.reduce((acc: number, curr: any) => {
+    const count = curr.blocks.filter((block: any) => block.type === 'book' || block.type === 'section' || block.type === 'text').length;
+    return acc + count;
+  }, 1); // the starting point of "1" accounts for the book block that doesn't get retrieved from cashmere right now
+  const sections = allBlocks.length;
+
+
+  
+
+  console.log(coreBlocks, sections);
+  
+  // const coreBlocks = allBlocks.filter((block: any) => block.type === 'book' || block.type === 'section' || block.type === 'text').length;
+  // const sections = allBlocks.filter((block: any) => block.type === 'section');
+  // const sectionBlocks = sections.length;
+  
+  const sb = await createClient();
+  
+  const {data: audioData, error: errorData} = await sb.storage.from('audio').list(`${bookId}/`, { limit: 10000 });
+  
+  if(!audioData) return;
+
+  const audioCount = allBlocks.reduce((acc: number, curr: any) => {
+    const filename = `${bookId}-${curr.navItem.order}.mp3`;
+    const idx = audioData.findIndex((audio: any) => audio.name === filename);
+    if(idx > -1) {
+      acc += 1;
+    }
+
+    return acc;
+  }, 0);
+
+  /**
+   * information we need to get (by book id):
+   * 1. total # of jobs (sb)
+   * 2. total # of completed jobs (sb)
+   * 3. total # of metadata blocks (sb)
+   * 5. total duration of the book (sb)
+   * 6. total # of audio files (sb storage)
+   * 8. has summary (sb)
+   * 9. has embedding (sb)
+   * 4. total number of blocks (text, section, book) in the book (cash)
+   * 7. total # of section blocks (cash)
+   */
+  
+  
+  
+  
+  const query = `
+WITH book_jobs AS (
+  SELECT 
+    (data->>'bookId') AS book_id,
+    COUNT(*) AS total_jobs,
+    COUNT(*) FILTER (WHERE status = 'completed') AS completed_jobs
+  FROM jobs
+  WHERE (data->>'bookId') = '${bookId}'
+  GROUP BY (data->>'bookId')
+),
+metadata_blocks AS (
+  SELECT 
+    book_id,
+    COUNT(*) AS total_metadata_blocks,
+    SUM((data->>'duration')::numeric) FILTER (WHERE type = 'section') AS total_duration,
+    BOOL_OR(CASE WHEN type = 'book' AND data->>'summary' IS NOT NULL THEN true ELSE false END) AS has_summary,
+    BOOL_OR(CASE WHEN type = 'book' AND embedding IS NOT NULL THEN true ELSE false END) AS has_embedding
+  FROM block_metadata
+  WHERE book_id = '${bookId}'
+  GROUP BY book_id
+)
+SELECT jsonb_build_object(
+  'totalJobs', bj.total_jobs,
+  'completedJobs', bj.completed_jobs,
+  'metadataBlocks', mb.total_metadata_blocks,
+  'duration', COALESCE(mb.total_duration, 0),
+  'hasSummary', COALESCE(mb.has_summary, false),
+  'hasEmbedding', COALESCE(mb.has_embedding, false)
+) AS result
+FROM book_jobs bj
+LEFT JOIN metadata_blocks mb ON bj.book_id = mb.book_id;
+`;
+
+  const {data, error} =  await sb.rpc('execute_sql', { sql: query });
+  const d = data[0];
+
+  return {
+    ...d,
+    audioCount,
+    coreBlocks,
+    sections,
+  };
+}

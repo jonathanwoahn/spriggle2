@@ -13,7 +13,7 @@ export function formatDuration(value: number) {
 
 
 
-export function formatDuration2(seconds: number): string {
+export function formatDuration2(seconds: number, showSeconds: boolean = true): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -21,7 +21,7 @@ export function formatDuration2(seconds: number): string {
   const parts: string[] = [];
   if (hours > 0) parts.push(`${hours}h`);
   if (minutes > 0) parts.push(`${minutes}m`);
-  if (secs > 0 || parts.length === 0) parts.push(`${Math.trunc(secs)}s`);
+  if ((secs > 0 || parts.length === 0) && showSeconds) parts.push(`${Math.trunc(secs)}s`);
 
   return parts.join(' ');
 }

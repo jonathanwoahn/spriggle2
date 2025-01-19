@@ -88,6 +88,36 @@ export default class Cashmere {
     return blocks;
   }
 
+  async getAllBookBlocks(id: string): Promise<any> {
+    const book = await this.getBook(id);
+    const nav = book.data.nav;
+
+    if(!nav) return;
+
+    return await Promise.all(nav.map(async (navItem) => {
+      const blocks = await this.getSectionBookBlocks(id, navItem.order.toString());
+      return {
+        navItem,
+        blocks,
+      };
+    }));
+  }
+
+  async getBookBlock(bookId: string, blockId: string): Promise<any> {
+    const url: string = `${this.baseURL}/book/${bookId}/block/${blockId}`;
+    const headers = this.headers;
+    const response = await fetch(url, { method: 'GET', headers });
+
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve book coverURL: ${response.statusText}`)
+    }
+
+    const data = await response.json();
+
+    return data;
+
+  }
+  
   async listBooks(qry: { search?: string, limit?: number | string, offset?: number | string }): Promise<{ item: IBookData[], count: number}[]> {
     const params = {
       search: qry.search || null,

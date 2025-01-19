@@ -1,3 +1,4 @@
+import { IResponse } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -28,16 +29,31 @@ export const GET = async (req: NextRequest) => {
   return NextResponse.json({data, count});
 }
 
-export const POST = async (req: NextRequest) => {
+
+// Add new array of jobs
+export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
   const body = await req.json();
   const supabase = await createClient();
 
   const { data, error } = await supabase.from('jobs').insert(body);
 
   if(error) {
-    console.error(error);
-    return NextResponse.json({error: error.message}, {status: 500});
+    return NextResponse.json({message: error.message}, {status: 500});
   }
 
-  return NextResponse.json(data);;
+  return NextResponse.json({data});;
 };
+
+export const PUT = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
+  const body = await req.json();
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.from('jobs').upsert(body);
+
+  if(error) {
+    return NextResponse.json({message: error.message}, {status: 500});
+  }
+
+  return NextResponse.json({data});;
+};
+
