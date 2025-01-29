@@ -1,22 +1,9 @@
-import { IOmnibookData, Omnibook } from "omnibook";
-
-export interface INav {
-  label: string;
-  order: number;
-}
+import { IOmnibookData } from "omnibook";
 
 export interface IBookData {
   cover_image: string;
   uuid: string;
-  data: {
-    title: string;
-    subtitle: string;
-    cover_image: string;
-    creators: string[];
-    creation_date: string;
-    publisher: string;
-    nav: INav[];
-  };
+  data: IOmnibookData;
 }
 
 export default class Cashmere {
@@ -29,44 +16,19 @@ export default class Cashmere {
     this.headers.set('Authorization', `Bearer ${this.cashmereAPIKey}`);
   }
 
-  // TODO: need to update the response type once we get the omnibook library added
   async getBook(id: string): Promise<{id: string, data: IOmnibookData}> {
     const url: string = `${this.baseURL}/book/${id}`;
-    const headers = this.headers;
-    const response = await fetch(url, { method: 'GET', headers });
-
-    if(!response.ok) {
-      throw new Error(`Failed to retrieve book: ${response.statusText}`);
-    }
-
-    return await response.json();
+    return this.executeRequest(url, 'GET');
   }
   
   async getBookCoverURL(id: string): Promise<string> {
     const url: string = `${this.baseURL}/book/${id}/cover_image`;
-    const headers = this.headers;
-    const response = await fetch(url, {method: 'GET', headers});
-
-    if(!response.ok) {
-      throw new Error(`Failed to retrieve book coverURL: ${response.statusText}`)
-    }
-
-    const data = await response.json();
-
-    return data;
+    return this.executeRequest(url, 'GET');
   }
 
-  // TODO: need to update the response type once we get the omnibook library added
   async getBookSection(id: string, order: number, format: 'json' | 'html' = 'json'): Promise<any> {
     const url: string = `${this.baseURL}/book/${id}/section/${order}/${format}`;
-    const headers = this.headers;
-    const response = await fetch(url, { method: 'GET', headers });
-
-    if(!response.ok) {
-      throw new Error(`Failed to retrieve book section: ${response.statusText}`);
-    }
-
-    return await response.json();
+    return this.executeRequest(url, 'GET');
   }
 
   async getSectionBookBlocks(id: string, order: string): Promise<any> {
@@ -80,7 +42,6 @@ export default class Cashmere {
 
       return blocks;
     }
-
     
     const section = await this.getBookSection(id, parseInt(order));
     const blocks = processBlock(section, []);
@@ -105,17 +66,8 @@ export default class Cashmere {
 
   async getBookBlock(bookId: string, blockId: string): Promise<any> {
     const url: string = `${this.baseURL}/book/${bookId}/block/${blockId}`;
-    const headers = this.headers;
-    const response = await fetch(url, { method: 'GET', headers });
 
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve book coverURL: ${response.statusText}`)
-    }
-
-    const data = await response.json();
-
-    return data;
-
+    return this.executeRequest(url, 'GET');
   }
   
   async listBooks(qry: { search?: string, limit?: number | string, offset?: number | string }): Promise<{ item: IBookData[], count: number}[]> {
@@ -126,13 +78,18 @@ export default class Cashmere {
     };
 
     const url: string = `${this.baseURL}/books?search=${params.search}&limit=${params.limit}&offset=${params.offset}`;
+
+    return this.executeRequest(url, 'GET');
+  }
+
+  private async executeRequest(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', body?: any): Promise<any> {
     const headers = this.headers;
-    const response = await fetch(url, { method: 'GET', headers });
+    const response = await fetch(url, { method, headers, body });
 
     if(!response.ok) {
-      throw new Error(`Failed to retrieve book list: ${response.statusText}`);
+      throw new Error(`Failed to execute request: ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 

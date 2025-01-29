@@ -8,25 +8,12 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AudioChapterManager } from './audio-manager';
 import BookCoverImage from "@/components/book-cover-image";
+import { IBookData } from "@/lib/cashmere";
 
 declare global {
   interface Document {
     userInteracted?: boolean;
   }
-}
-
-export interface INav {
-  order: number;
-  label: string;
-}
-
-export interface IBookData {
-  uuid: string;
-  data: {
-    title: string;
-    creators: string[];
-    nav: INav[];
-  },
 }
 
 export default function MediaPlayer({bookData}: {bookData: IBookData}) {
@@ -69,7 +56,7 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
       if (!audioManagerRef.current) return;
 
       const currentOrder = parseInt(params.order);
-      if(currentOrder + 1 < bookData.data.nav.length) {
+      if(currentOrder + 1 < (bookData.data.nav || []).length) {
         handleSkip('next');
       }
     }
@@ -208,7 +195,7 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
           onSeekEnd={handleSeekEnd}
           duration={duration}
           totalLength={totalLength}
-          chapterTitle={bookData.data.nav[parseInt(params.order)].label}
+          chapterTitle={(bookData.data.nav || [])[parseInt(params.order)].label}
           onSeekStart={handleSeekStart}
         />
         <PlayerControls
