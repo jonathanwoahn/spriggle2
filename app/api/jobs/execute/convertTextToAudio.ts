@@ -64,10 +64,5 @@ export const convertTextToAudio = async (job: IBlockJob, baseUrl: string): Promi
   }catch (e) {
     console.error('ERROR: ', e);
     throw new Error((e as Error).message);
-    // return {
-    //   job,
-    //   requestStatus: 'failed',
-    //   message: (e as Error).message,
-    // };
   }
 }
