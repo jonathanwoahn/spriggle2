@@ -104,9 +104,6 @@ dependencies:
   uuid:
     specifier: ^11.0.5
     version: 11.0.5
-  uuidv4:
-    specifier: ^6.2.13
-    version: 6.2.13
 
 devDependencies:
   '@types/fluent-ffmpeg':
@@ -1631,10 +1628,6 @@ packages:
 
   /@types/unist@3.0.3:
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
-    dev: false
-
-  /@types/uuid@8.3.4:
-    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: false
 
   /@types/ws@8.5.13:
@@ -3702,19 +3695,6 @@ packages:
   /uuid@11.0.5:
     resolution: {integrity: sha512-508e6IcKLrhxKdBbcA2b4KQZlLVp2+J5UwQ6F7Drckkc5N9ZJwFa4TgWtsww9UG8fGHbm6gbV19TdM5pQ4GaIA==}
     hasBin: true
-    dev: false
-
-  /uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    hasBin: true
-    dev: false
-
-  /uuidv4@6.2.13:
-    resolution: {integrity: sha512-AXyzMjazYB3ovL3q051VLH06Ixj//Knx7QnUSi1T//Ie3io6CpsPu9nVMOx5MoLWh6xV0B9J0hIaxungxXUbPQ==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-    dependencies:
-      '@types/uuid': 8.3.4
-      uuid: 8.3.2
     dev: false
 
   /vfile-message@4.0.2:
