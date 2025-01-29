@@ -44,7 +44,8 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   const isSeekingRef = useRef(false);
 
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
-  
+
+  // when the application loads, create an audio manager and set up event listeners
   useEffect(() => {
     audioManagerRef.current = new AudioChapterManager(new Audio());
 
@@ -58,7 +59,9 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
 
     const handleTimeupdate = () => {
       if (!isSeekingRef.current && !!audioManagerRef.current) {
-        setPosition(audioManagerRef.current.currentTime);
+        const currentTime = audioManagerRef.current.currentTime;
+        setPosition(currentTime);
+        localStorage.setItem(`position-${params.id}-${params.order}`, currentTime.toString());
       }
     }
 
@@ -90,6 +93,13 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
 
       setIsLoading(true);
       await audioManagerRef.current.prepareChapter(params.id, parseInt(params.order));
+      const savedPosition = localStorage.getItem(`position-${params.id}-${params.order}`);
+
+      if(savedPosition) {
+        setPosition(parseFloat(savedPosition));
+        audioManagerRef.current.seek(parseFloat(savedPosition));
+      }
+
       setIsLoading(false);
 
       if(audioManagerRef.current && autoplay) {

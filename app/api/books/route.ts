@@ -21,6 +21,7 @@ export const GET = async (req: NextRequest) => {
       search: searchParams.get('search') || undefined,
     };
   
+
     const books = await cash.listBooks(qry);
   
     return NextResponse.json(books);

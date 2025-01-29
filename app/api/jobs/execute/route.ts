@@ -1,7 +1,7 @@
 import { IBlockJob, IResponse, JobStatus } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { checkDependencies, IJobResults, jobRouter } from "./helpers";
+import { checkDependencies, IJobResults, jobRouter, updateAndCompleteJobFailed } from "./helpers";
 
 export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
 
@@ -22,7 +22,7 @@ export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> =
     }
     
     const ready = await checkDependencies(job, sb);
-    
+
     if(!ready) {
       return {
         job,
@@ -43,14 +43,20 @@ export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> =
         ],
       };
       
-      await fetch(`${baseUrl}/api/jobs`, {
-        method: 'PUT',
-        body: JSON.stringify(updatedJob),
-      });
       
-      return jobRouter(updatedJob, baseUrl);
+      try {
+        await fetch(`${baseUrl}/api/jobs`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedJob),
+        });
+        return jobRouter(updatedJob, baseUrl);
+      } catch (e) {
+        console.error('ERROR: ', e);
+
+        return updateAndCompleteJobFailed({job: updatedJob, baseUrl, message: (e as Error).message});
+      }
     }
   }));
 
-  return NextResponse.json({message: 'Hello, World!', data: processedJobs});
+  return NextResponse.json({message: 'Jobs finished processing', data: processedJobs});
 }

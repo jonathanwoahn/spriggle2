@@ -11,9 +11,9 @@ export default function ChapterDrawer({isOpen, setIsOpen, bookData}: {isOpen: bo
 
   useEffect(() => {
     const getMetadata = async () => {
-      const blockResponse = await fetch(`/api/block-metadata/${bookData.uuid}/section`);
-      const blockData = await blockResponse.json();
-      setBlockData(blockData);
+      const blockResponse = await fetch(`/api/metadata?bookId=${bookData.uuid}&type=section`);
+      const {data} = await blockResponse.json();
+      setBlockData(data);
     }
     
     getMetadata();

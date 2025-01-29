@@ -77,6 +77,9 @@ export const jobRouter = async (job: IBlockJob, baseUrl: string): Promise<IJobRe
     }
 
   } catch (e) {
+
+    console.error('ERROR: ', e);
+    
     // update job status to failed
     await fetch(`${baseUrl}/api/jobs`, {
       method: 'PUT',
@@ -102,16 +105,7 @@ export const jobRouter = async (job: IBlockJob, baseUrl: string): Promise<IJobRe
 }
 
 
-export const updateMetadataAndCompleteJob = async (metadata: IBlockMetadata, job: IBlockJob, baseUrl: string): Promise<IJobResults> => {
-  const updateMetadataResponse = await fetch(`${baseUrl}/api/metadata`, {
-    method: 'PUT',
-    body: JSON.stringify(metadata),
-  });
-
-  if (!updateMetadataResponse.ok) {
-    throw new Error(`Error updating metadata for job ${job.id}`);
-  }
-
+export const updateAndCompleteJobSuccessfully = async ({job, baseUrl, message = 'Job success'} : {job: IBlockJob, baseUrl: string, message?: string}): Promise<IJobResults> => {
   const updatedJob: IBlockJob = {
     ...job,
     status: JobStatus.COMPLETED,
@@ -119,7 +113,7 @@ export const updateMetadataAndCompleteJob = async (metadata: IBlockMetadata, job
       ...job.log,
       {
         timestamp: new Date().toISOString(),
-        message: `Job completed successfully`,
+        message,
       },
     ],
   };
@@ -136,6 +130,53 @@ export const updateMetadataAndCompleteJob = async (metadata: IBlockMetadata, job
   return {
     job: updatedJob,
     requestStatus: 'success',
-    message: `Job ${job.id} successfully completed`,
+    message: `Job ${job.id} completed: ${message}`,
   };
+}
+
+export const updateAndCompleteJobFailed = async ({job, baseUrl, message = 'Job failed'} : {job: IBlockJob, baseUrl: string, message?: string}): Promise<IJobResults> => {
+  const updatedJob: IBlockJob = {
+    ...job,
+    status: JobStatus.FAILED,
+    log: [
+      ...job.log,
+      {
+        timestamp: new Date().toISOString(),
+        message,
+      },
+    ],
+  };
+
+  const updateJobResponse = await fetch(`${baseUrl}/api/jobs`, {
+    method: 'PUT',
+    body: JSON.stringify(updatedJob),
+  });
+
+  if (!updateJobResponse.ok) {
+    throw new Error(`Error updating job ${job.id}`);
+  }
+
+  return {
+    job: updatedJob,
+    requestStatus: 'failed',
+    message: `Job ${job.id} failed: ${message}`,
+  };
+}
+
+export const updateMetadataAndCompleteJob = async (metadata: IBlockMetadata, job: IBlockJob, baseUrl: string): Promise<IJobResults> => {
+  try {
+
+    const updateMetadataResponse = await fetch(`${baseUrl}/api/metadata`, {
+      method: 'PUT',
+      body: JSON.stringify(metadata),
+    });
+  
+    if (!updateMetadataResponse.ok) {
+      throw new Error(`Error updating metadata for job ${job.id}`);
+    }
+  
+    return updateAndCompleteJobSuccessfully({job, baseUrl});
+  } catch (e) {
+    return updateAndCompleteJobFailed({job, baseUrl, message: (e as Error).message});
+  }
 }

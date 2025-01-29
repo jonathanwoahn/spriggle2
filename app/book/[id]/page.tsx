@@ -10,6 +10,7 @@ import BookCollectionChips from "./book-collection-chips";
 import MuiMarkdown from "mui-markdown";
 import { formatDuration2 } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
+import { IBlockMetadata } from "@/lib/types";
 
 
 
@@ -29,11 +30,9 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     return <div>Book not found</div>;
   }  
 
-  const blockResponse = await fetch(`${defaultUrl}/api/block-metadata/${bookData.uuid}/book`);
-  const blockData = (await blockResponse.json())[0];
-  
-  
-
+  const blockResponse = await fetch(`${defaultUrl}/api/metadata?bookId=${bookData.uuid}&type=book`);
+  const {data} = (await blockResponse.json());
+  const blockData: IBlockMetadata = data[0];
 
   const carouselSettings: Partial<IBookCarousel> = {
     slidesToShow: 3,
@@ -66,17 +65,22 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                 </Grid>
                 <Grid size={{xs: 12, md: 7}}>
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
-                    <Typography variant="h5" component="h5">{bookData.data.title}</Typography>
-                    <Typography variant="body2" component="p">By {bookData.data.creators.join(', ')}</Typography>
-                    <Typography variant="body2" component="p">{formatDuration2(blockData?.data.duration / 1000)}</Typography>
-
+                    <Typography variant="h5" component="h5">{bookData?.data.title}</Typography>
+                    <Typography variant="body2" component="p">By {bookData?.data.creators.join(', ')}</Typography>
+                    <Typography variant="body2" component="p">{(!!blockData && blockData.data.duration) ? formatDuration2((blockData?.data.duration || 0) / 1000) : null}</Typography>
                   </Box>
                 </Grid>
               </Grid>
             </Grid>
             <Grid size={{xs: 12, md: 4}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
-                <Button startIcon={<PlayIcon />} variant="contained" href={`/book/${id}/play/0`}>Play</Button>
+                <Button
+                  disabled={!blockData || !blockData?.data.ready}
+                  startIcon={<PlayIcon />}
+                  variant="contained"
+                  href={`/book/${id}/play/0`}>
+                    Play
+                </Button>
                 <ChaptersButton bookData={bookData} />
               </Box>
             </Grid>
