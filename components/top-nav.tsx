@@ -19,10 +19,7 @@ const SignInButtons = () => (
 
 export default async function TopNav() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user }, } = await supabase.auth.getUser();
 
   return (
     <AppBar position="sticky" sx={{top: 0, position: 'sticky',}}>

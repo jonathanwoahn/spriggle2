@@ -4,16 +4,13 @@ import PlayIcon from "@mui/icons-material/PlayArrow";
 import Footer from "@/components/footer/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
-import { IBookData } from "./play/[order]/media-player";
 import BookCoverImage from "@/components/book-cover-image";
 import BookCollectionChips from "./book-collection-chips";
 import MuiMarkdown from "mui-markdown";
 import { formatDuration2 } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
-import { IBlockMetadata } from "@/lib/types";
-
-
-
+import { IBlockMetadata, IBookData } from "@/lib/types";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
@@ -29,6 +26,14 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
   if (!bookData) {
     return <div>Book not found</div>;
   }  
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  
+  
 
   const blockResponse = await fetch(`${defaultUrl}/api/metadata?bookId=${bookData.uuid}&type=book`);
   const {data} = (await blockResponse.json());
@@ -66,7 +71,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                 <Grid size={{xs: 12, md: 7}}>
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
                     <Typography variant="h5" component="h5">{bookData?.data.title}</Typography>
-                    <Typography variant="body2" component="p">By {bookData?.data.creators.join(', ')}</Typography>
+                    <Typography variant="body2" component="p">By {(bookData?.data.creators || []).join(', ')}</Typography>
                     <Typography variant="body2" component="p">{(!!blockData && blockData.data.duration) ? formatDuration2((blockData?.data.duration || 0) / 1000) : null}</Typography>
                   </Box>
                 </Grid>
@@ -86,7 +91,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             </Grid>
           </Grid>
         </Box>
-        <BookIngestionStatus bookId={id} />
+        {!!user && <BookIngestionStatus bookId={id} />}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <MuiMarkdown
             overrides={{

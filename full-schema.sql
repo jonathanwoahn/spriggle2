@@ -59,6 +59,18 @@ create unique index unique_book_block_omnibook on public.jobs (
   (data->>'bookId')
 );
 
+-- Index on jobs table
+DROP INDEX IF EXISTS idx_jobs_book_id;
+CREATE INDEX idx_jobs_book_id ON jobs((data->>'bookId'));
+DROP INDEX IF EXISTS idx_jobs_status;
+CREATE INDEX idx_jobs_status ON jobs(status);
+
+-- Index on block_metadata table
+DROP INDEX IF EXISTS idx_block_metadata_book_id;
+CREATE INDEX idx_block_metadata_book_id ON block_metadata(book_id);
+DROP INDEX IF EXISTS idx_block_metadata_block_id;
+CREATE INDEX idx_block_metadata_type ON block_metadata(type);
+
 -- this is just a temporary solution. we'll come back to this later once everyting else is working
 ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;

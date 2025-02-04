@@ -242,15 +242,16 @@ metadata_blocks AS (
   GROUP BY book_id
 )
 SELECT jsonb_build_object(
-  'totalJobs', bj.total_jobs,
-  'completedJobs', bj.completed_jobs,
-  'metadataBlocks', mb.total_metadata_blocks,
+  'totalJobs', COALESCE(bj.total_jobs, 0),
+  'completedJobs', COALESCE(bj.completed_jobs, 0),
+  'metadataBlocks', COALESCE(mb.total_metadata_blocks, 0),
   'duration', COALESCE(mb.total_duration, 0),
   'hasSummary', COALESCE(mb.has_summary, false),
   'hasEmbedding', COALESCE(mb.has_embedding, false)
 ) AS result
-FROM book_jobs bj
-LEFT JOIN metadata_blocks mb ON bj.book_id = mb.book_id;
+FROM (SELECT '${bookId}' AS book_id) b
+LEFT JOIN book_jobs bj ON b.book_id = bj.book_id
+LEFT JOIN metadata_blocks mb ON b.book_id = mb.book_id;
 `;
 
   const {data, error} =  await sb.rpc('execute_sql', { sql: query });
