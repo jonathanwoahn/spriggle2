@@ -172,6 +172,7 @@ export const updateMetadataAndCompleteJob = async (metadata: IBlockMetadata, job
     });
   
     if (!updateMetadataResponse.ok) {
+      console.error(updateMetadataResponse.statusText, metadata);
       throw new Error(`Error updating metadata for job ${job.id}`);
     }
   

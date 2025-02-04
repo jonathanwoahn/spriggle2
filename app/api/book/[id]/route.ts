@@ -2,6 +2,7 @@ import Cashmere from "@/lib/cashmere";
 import { NextApiRequest } from "next";
 import { NextRequest, NextResponse } from "next/server";
 
+// retrieves the content of a specific book
 export const GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

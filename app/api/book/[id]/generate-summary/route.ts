@@ -41,6 +41,7 @@ This story is a celebration of the extraordinary found in the ordinary, remindin
 - Adults nostalgic for a timeless tale that resonates across generations.
 `;
 
+// Creates a summary of a specific book
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const baseUrl = req.nextUrl.origin;

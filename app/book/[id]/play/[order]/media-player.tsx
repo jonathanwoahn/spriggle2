@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AudioChapterManager } from './audio-manager';
 import BookCoverImage from "@/components/book-cover-image";
-import { IBookData } from "@/lib/cashmere";
+import { PlaybackReporter } from "./playback-reporter";
+import { IBlockMetadata, IBookData } from "@/lib/types";
 
 declare global {
   interface Document {
@@ -16,7 +17,7 @@ declare global {
   }
 }
 
-export default function MediaPlayer({bookData}: {bookData: IBookData}) {
+export default function MediaPlayer({ bookData, metadata }: { bookData: IBookData, metadata: IBlockMetadata[]}) {
   const params = useParams<{id: string, order: string}>();
   const router = useRouter();
 
@@ -29,8 +30,8 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
   const [speed, setSpeed] = useState<{value: number, label: string}>(SPEEDS[1]);
   
   const isSeekingRef = useRef(false);
-
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
+  const reporterRef = useRef<PlaybackReporter>(new PlaybackReporter(metadata));
 
   // when the application loads, create an audio manager and set up event listeners
   useEffect(() => {
@@ -47,6 +48,9 @@ export default function MediaPlayer({bookData}: {bookData: IBookData}) {
     const handleTimeupdate = () => {
       if (!isSeekingRef.current && !!audioManagerRef.current) {
         const currentTime = audioManagerRef.current.currentTime;
+
+        reporterRef.current?.reportPlayback(currentTime);
+        
         setPosition(currentTime);
         localStorage.setItem(`position-${params.id}-${params.order}`, currentTime.toString());
       }

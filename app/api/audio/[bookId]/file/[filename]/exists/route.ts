@@ -2,6 +2,7 @@ import { AUDIO_BUCKET } from "@/app/api/jobs/execute/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Utility endpoint that checks to see if a file already exists on the server. It helps to prevent excessive server load
 export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ bookId: string, filename: string }> },

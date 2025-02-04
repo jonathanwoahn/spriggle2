@@ -2,8 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { PassThrough } from 'stream';
 
-// this is the endpoint that streams audio to the client
-
+// this is the endpoint that streams audio to the client. The bookId gives the folder, and the order # provides the file name
 export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ bookId: string, order: string }> }

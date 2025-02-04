@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDependencies, IJobResults, jobRouter, updateAndCompleteJobFailed } from "./helpers";
 
+// Endpoint to trigger job execution. Receives an array of job IDs to process
 export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
 
   const body = await req.json();

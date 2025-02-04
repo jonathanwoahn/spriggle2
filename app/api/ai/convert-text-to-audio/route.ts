@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
 
 
+// Takes a text input and converts it to an audio file
 export const POST = async (req: NextRequest) => {
   const { text, voice = 'fable' } = await req.json();
   const baseUrl = req.nextUrl.origin;

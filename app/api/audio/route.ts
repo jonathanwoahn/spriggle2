@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { AUDIO_BUCKET, ensureBucketExists } from "../jobs/execute/helpers";
 
+// Upload an audio file to the storage bucket. Requires a bookId, filename and the file Blob
 export const POST = async (req: NextRequest) => {
   const sb = await createClient();
   const formData = await req.formData();

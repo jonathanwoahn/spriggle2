@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 
+// DEPRECATED: This route is no longer used in the application.
 export const POST = async (
   request: NextRequest,
   { params }: { params: Promise<{ bookId: string }> },

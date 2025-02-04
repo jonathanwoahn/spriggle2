@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Cashmere from "@/lib/cashmere";
 
+// creates the audio files for all the sections in a book. I believe this route is deprecated since it takes too long to run on Vercel
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ bookId: string }> }) => {
   const { bookId } = await params;
 

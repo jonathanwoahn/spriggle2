@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// updates all failed jobs to pending
 export const POST = async (req: NextRequest) => {
     const sb = await createClient();
 

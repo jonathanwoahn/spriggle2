@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { start } from "repl";
 
 
+// retrieve the Spriggle collections
 export const GET = async (req: NextRequest) => {
   const supabase = await createClient();
   const searchParams = req.nextUrl.searchParams;
@@ -25,6 +25,7 @@ export const GET = async (req: NextRequest) => {
   return NextResponse.json({count, data});
 }
 
+// create a new Spriggle collection
 export const POST = async (req: NextRequest) => {
 
   // get the data from the request body
@@ -41,6 +42,7 @@ export const POST = async (req: NextRequest) => {
   return NextResponse.json({success: true});
 }
 
+// Update a Spriggle collection
 export const PUT = async (req: NextRequest) => {
   const data = await req.json();
   const supabase = await createClient();

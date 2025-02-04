@@ -19,6 +19,7 @@ export const GET = async (req: NextRequest) => {
       limit: searchParams.get('limit') || undefined,
       offset: searchParams.get('offset') || undefined,
       search: searchParams.get('search') || undefined,
+      collection: searchParams.get('collection') || undefined,
     };
   
 

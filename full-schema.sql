@@ -76,12 +76,13 @@ create table public.collections (
 );
 
 -- I need a table that connects collections to bookId's. This table should have an id, collection_id, book_id, and created_at. It should connect to the collections table, but the book_id's are an external id
-
+drop table if exists public.collection_books;
 create table public.collection_books (
   id serial primary key,
   collection_id integer references public.collections(id) not null,
   book_id varchar(32) not null,
-  created_at timestamp not null default now()
+  created_at timestamp not null default now(),
+  unique (collection_id, book_id)
 );
 
 -- build a table that holds audio file metadata. it should include things like book_id, block_id, duration, start_time, section order number, and sequence number
@@ -135,3 +136,23 @@ as $$
   order by bm.embedding <=> query_embedding asc
   limit least(match_count, 200);
 $$;
+
+
+
+
+
+-- ********** REPORTING ***********
+-- create a table to hold the reporting data. it should include the following columns: id, block_id, transactionId, api_key, license_type, reported_at, used_at, data (jsonb)
+
+drop table if exists public.reporting;
+create table public.reporting (
+  id uuid primary key default gen_random_uuid(),
+  block_id varchar(32) not null,
+  transaction_id varchar(32) not null,
+  api_key varchar(255) not null,
+  license_type varchar(255) not null,
+  reported_at timestamp not null default now(),
+  used_at timestamp not null default now(),
+  data jsonb
+);
+

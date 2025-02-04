@@ -17,9 +17,9 @@ export default async function Home() {
           pl: 2,
           pr: 2,
         }}>
-        <BookCarousel />
-        <BookCarousel />
-        <BookCarousel />
+        <BookCarousel collectionId={3} />
+        <BookCarousel collectionId={1} />
+        <BookCarousel collectionId={2} />
       </Box>
       <Footer />
     </Box>

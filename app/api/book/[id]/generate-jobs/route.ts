@@ -43,6 +43,7 @@ const buildJob = ({bookId, blockId, jobType, blockIndex, order, dependencies = [
   };
 }
 
+// creates all of the jobs required to convert a book into an audiobook
 export const POST = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

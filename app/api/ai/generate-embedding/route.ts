@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
+// Takes a text input and generates an ada-002 embedding
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ bookId: string }> }) => {
   const {text} = await req.json();
   const baseUrl = req.nextUrl.origin;

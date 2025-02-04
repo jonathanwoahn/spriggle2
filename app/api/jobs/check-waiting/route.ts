@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDependencies } from "../execute/helpers";
 
+// Checks to see if there are any jobs waiting to be processed, and if their children are complete, updates them
 export const POST = async (
   req: NextRequest,
 ) => {

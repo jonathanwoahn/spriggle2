@@ -2,6 +2,7 @@ import { AUDIO_BUCKET } from "@/app/api/jobs/execute/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// returns an audio file from the storage bucket
 export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ bookId: string, filename: string }> },

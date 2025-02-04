@@ -1,6 +1,7 @@
 import Cashmere from "@/lib/cashmere";
 import { NextRequest, NextResponse } from "next/server";
 
+// retrieves a single book block
 export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string, blockId: string }> },

@@ -2,6 +2,7 @@ import { IResponse } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// retrieves jobs with search parameters
 export const GET = async (req: NextRequest) => {
   const supabase = await createClient();
   const searchParams = req.nextUrl.searchParams;
@@ -44,6 +45,7 @@ export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> =
   return NextResponse.json({data});;
 };
 
+// update the data for a job
 export const PUT = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
   const body = await req.json();
   const supabase = await createClient();

@@ -128,7 +128,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
         </Box>
         <BookCollectionChips bookId={id} />
         <Box sx={{ p: 2 }}>
-          <BookCarousel {...carouselSettings} />
+          <BookCarousel {...carouselSettings} bookId={id} />
         </Box>
       </Box>
       <Footer />

@@ -1,7 +1,7 @@
 'use client';
 import { formatDuration } from "@/lib/utils";
 import { Box, Slider, Typography } from "@mui/material";
-
+import { useEffect } from 'react';
 
 export function formatDuration2(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -34,6 +34,20 @@ export default function PlayerProgress({
   onSeekEnd: () => void,
   onSeekStart: () => void,
 }) {
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      onSeekEnd();
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+  },[onSeekEnd])
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: 2, pb: 2, }}>

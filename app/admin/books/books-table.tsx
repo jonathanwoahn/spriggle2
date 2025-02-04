@@ -1,15 +1,15 @@
 'use client';
-import { Box, Button, Checkbox, CircularProgress, Input, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, CircularProgress, Dialog, DialogContent, DialogTitle, Input, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { format } from 'date-fns';
 import SearchIcon from '@mui/icons-material/Search';
-import { IBookData } from "@/lib/cashmere";
 import { useRouter } from "next/navigation";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { IBookData } from "@/lib/types";
+import BookCollectionsDialog from "./book-collections-dialog";
 
 export default function BooksTable() {
   const router = useRouter();
-
   
   const [books, setBooks] = useState<IBookData[]>([]);
   const [page, setPage] = useState(0);
@@ -27,7 +27,8 @@ export default function BooksTable() {
     const fetchBooks = async () => {
 
       try {
-        const response = await fetch(`/api/books?limit=${rowsPerPage}&offset=${page * rowsPerPage}&search=${search}`);
+        const response = await fetch(`/api/books?limit=${rowsPerPage}&offset=${page * rowsPerPage}&search=${search}&collection=3`);
+        
         const {items, count, error} = await response.json();
   
         if(error) {
@@ -133,130 +134,13 @@ export default function BooksTable() {
     setAnchorEl(null);
   }
 
-
-  /**
-   * NOTE TO SELF
-   * Next step, I want to modify the 'audio_metadata' table to be 'block_metadata', and then include a type column to record the block type
-   * This will allow me to generate metadata for each type of block. For instance, for sections, I can create section summaries, record how long the section is, etc.
-   * For book blocks, I can store the full length of the book, i can generate a brief summary of the book, etc. 
-   * I should generate the summaries in markdown, and render the markdown on the frontend
-   * I want to use the summaries to generate embeddings, that i can then use to not only search for books, but provide lists of "similar books"
-   * I should also generate the legal pages in markdown and render them on the front end so I don't have to format them manually
-   */
-  
-
   const ACTIONS = [
-    {
-      value: 'generate_jobs',
-      label: 'Generate Jobs',
-    },
-    // {
-    //   value: 'process_jobs',
-    //   label: 'Process Jobs',
-    // },
-    {
-      value: 'process_block_metadata',
-      label: 'Process Text Block Metadata',
-    },
-    {
-      value: 'combine_audio_chunks',
-      label: 'Combine Audio Chunks',
-    },
-    {
-      value: 'generate_book_summary',
-      label: 'Generate Book Summary',
-    },
-    // {
-    //   value: 'generate_book_overview',
-    //   label: 'Generate Book Overview',
-    // },
-    {
-      value: 'generate_embedding',
-      label: 'Generate Embedding',
-    },
     {
       value: 'add_to_collections',
       label: 'Add to Collections',
+      // action: () => setShowCollections(true),
     },
   ];
-
-  const generateJobs = async (ids: string[]) => {
-    setIsProcessing(true);
-    for(let i = 0; i < ids.length; i++) {
-      try {
-        await fetch(`/api/book/${ids[i]}/tts`, { method: 'POST' });
-      }catch(e) {
-        console.error(e);
-      } finally {
-        console.log(`Jobs generated for book ${ids[i]}`);
-      }
-    }
-
-    setIsProcessing(false);
-  }
-  
-  const processTextBlockMetadata = async (ids: string[]) => {
-    setIsProcessing(true);
-    for (let i = 0; i < ids.length; i++) {
-      try {
-        await fetch(`/api/audio/${ids[i]}/utility/process-block-metadata`, { method: 'POST' });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        console.log(`Jobs generated for book ${ids[i]}`);
-      }
-    }
-
-    setIsProcessing(false);
-  }
-
-  const combineAudioChunks = async (ids: string[]) => {
-    setIsProcessing(true);
-    for (let i = 0; i < ids.length; i++) {
-      try {
-        await fetch(`/api/audio/${ids[i]}/utility/combine-audio-chunks`, { method: 'POST' });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        console.log(`Jobs generated for book ${ids[i]}`);
-      }
-    }
-
-    setIsProcessing(false);
-  }
-
-  const generateBookSummary = async (ids: string[]) => {
-    setIsProcessing(true);
-    for (let i = 0; i < ids.length; i++) {
-      try {
-        await fetch(`/api/audio/${ids[i]}/utility/generate-book-summary`, { method: 'POST' });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        console.log(`Jobs generated for book ${ids[i]}`);
-      }
-    }
-
-    setIsProcessing(false);
-  }
-
-  const generateEmbeddings = async (ids: string[]) => {
-    setIsProcessing(true);
-    for (let i = 0; i < ids.length; i++) {
-      try {
-        await fetch(`/api/audio/${ids[i]}/utility/generate-embedding`, { method: 'POST' });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        console.log(`Jobs generated for book ${ids[i]}`);
-      }
-    }
-
-    setIsProcessing(false);
-  }
-
-  // const addToCollections = 
-  
   
   const handleMenuClick = (action: string) => {
     handleClose();
@@ -266,30 +150,13 @@ export default function BooksTable() {
     }
     
     switch(action) {
-      case 'generate_jobs':
-        generateJobs(selected);
-        break;
-      case 'process_block_metadata':
-        processTextBlockMetadata(selected);
-        break;
-      case 'combine_audio_chunks':
-        combineAudioChunks(selected);
-        break;
-      case 'generate_book_summary':
-        generateBookSummary(selected);
-        break;
-      case 'generate_embedding':
-        generateEmbeddings(selected);
-        break;
       case 'add_to_collections':
-        // addToCollections(selected);
+        setShowCollections(true);
+        break;
     }
 
-    setSelected([]);
+    // setSelected([]);
   }
-  
-  
-  
   
   return (
     <>
@@ -393,6 +260,7 @@ export default function BooksTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      <BookCollectionsDialog isOpen={showCollections} setIsOpen={setShowCollections} bookIds={selected} />
     </>
   );
 }

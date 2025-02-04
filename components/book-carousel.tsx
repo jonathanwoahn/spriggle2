@@ -1,13 +1,22 @@
 'use client';
-import { Box, ButtonBase, Typography } from "@mui/material";
+import { Box, ButtonBase, Skeleton, Typography } from "@mui/material";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Image from "next/image";
 import { BOOKS } from "@/utils/constants";
 import BookCoverImage from "./book-cover-image";
+import { useEffect, useState } from "react";
+import CarouselCard from "./carousel-card";
+import { it } from "node:test";
 
 export interface IBookCarousel {
+  // provide a collection ID if you want to display the books associated with a collection
+  collectionId?: number;
+
+  // provide a book ID if you want to display books similar to a specific book title
+  bookId?: string;
+  
   dots?: boolean;
   infinite?: boolean;
   speed?: number;
@@ -84,15 +93,53 @@ const defaultProps: IBookCarousel = {
 };
 
 export default function BookCarousel({...props}: IBookCarousel) {
+
+  const {collectionId, bookId} = props;
+
+  const [collection, setCollection] = useState<{description: string, name: string,} | undefined>();
+  const [books, setBooks] = useState<{book_id: string}[]>();
+  
   const settings = {
     ...defaultProps,
     ...props,
   };
 
+  useEffect(() => {
+    const initCollection = async (url: string) => {
+      const res = await fetch(url);
+
+      const {collection_books: collectionBooks, ...data} = await res.json();
+
+      setCollection(data);
+      setBooks(collectionBooks);
+    }
+
+    let url: string | undefined = undefined;
+    
+    if(collectionId) {
+      url = `/api/collections/${collectionId}/books`;
+    }else if(bookId) {
+      url = `/api/book/${bookId}/similar`;
+    }
+
+    if(!url) return;
+
+    initCollection(url);
+    
+  }, [props.collectionId, props.bookId]);
+  
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', }}>
-        <Typography variant="h4" sx={{ mb: 2 }}>Popular Books</Typography>
+        {collection ? (
+          <Box sx={{display: 'flex', flexDirection: 'column'}}>
+            <Typography variant="h4" sx={{ mb: 1 }}>{collection?.name}</Typography>
+            {/* <Typography variant="body2" sx={{ mb: 2 }}>{collection?.description}</Typography> */}
+          </Box>
+          
+        ) : (
+          <Skeleton animation="wave" variant="text" width={320} sx={{fontSize: '2rem'}} />
+        )}
       </Box>
       <Box sx={{
         display: 'flex',
@@ -103,55 +150,12 @@ export default function BookCarousel({...props}: IBookCarousel) {
         pr: '48px',
         pb: '32px',
       }}>
-          <Box sx={{ width: '100%' }}>
-            <Slider {...settings}>
-            {BOOKS.map((item, idx) => (
-                <Box component="div" sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', }} key={idx}>
-                  <ButtonBase
-                    href={"/book/" + item.book_uuid}
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      width: '200px',
-                      ml: 'auto',
-                      mr: 'auto',
-                      p: 2,
-                      gap: 2,
-                    }}>
-                    <BookCoverImage bookId={item.book_uuid} />
-                    <Box
-                      component="div"
-                      sx={{
-                        display: 'block',
-                        width: '100%',
-                      }}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          display: 'block',
-                        }}>{item.title}</Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>{item.author}</Typography>
-                    </Box>
-                  </ButtonBase>
-
-                </Box>
-              ))}
-            </Slider>
-
-          </Box>
-
+        <Box sx={{ width: '100%' }}>
+          <Slider {...settings}>
+            {books?.map((item, idx) => (<CarouselCard bookId={item.book_id} key={idx} />))}
+          </Slider>
         </Box>
-      </>
+      </Box>
+    </>
   )
 }
