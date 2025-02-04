@@ -1,7 +1,7 @@
 import BookCarousel, { IBookCarousel } from "@/components/book-carousel";
 import { Box, Button, Typography } from "@mui/material";
 import PlayIcon from "@mui/icons-material/PlayArrow";
-import Footer from "@/components/footer";
+import Footer from "@/components/footer/footer";
 import { Grid2 as Grid } from '@mui/material';
 import ChaptersButton from "./chapters-button";
 import { IBookData } from "./play/[order]/media-player";

@@ -1,5 +1,5 @@
 import BookCarousel from "@/components/book-carousel";
-import Footer from "@/components/footer";
+import Footer from "@/components/footer/footer";
 import Hero from "@/components/hero";
 import { Box } from "@mui/material";
 
@@ -18,8 +18,8 @@ export default async function Home() {
           pr: 2,
         }}>
         <BookCarousel collectionId={3} />
-        <BookCarousel collectionId={1} />
-        <BookCarousel collectionId={2} />
+        {/* <BookCarousel collectionId={1} />
+        <BookCarousel collectionId={2} /> */}
       </Box>
       <Footer />
     </Box>
