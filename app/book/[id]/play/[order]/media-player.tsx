@@ -31,7 +31,8 @@ export default function MediaPlayer({ bookData, metadata }: { bookData: IBookDat
   
   const isSeekingRef = useRef(false);
   const audioManagerRef = useRef<AudioChapterManager | null>(null);
-  const reporterRef = useRef<PlaybackReporter>(new PlaybackReporter(metadata));
+  // const reporterRef = useRef<PlaybackReporter>(new PlaybackReporter(metadata));
+  const reporterRef = useRef<PlaybackReporter>(PlaybackReporter.getInstance(metadata));
 
   // when the application loads, create an audio manager and set up event listeners
   useEffect(() => {

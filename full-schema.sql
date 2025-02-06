@@ -144,13 +144,14 @@ $$;
 drop table if exists public.reporting;
 create table public.reporting (
   id uuid primary key default gen_random_uuid(),
-  block_id varchar(32) not null,
-  transaction_id varchar(32) not null,
+  block_id varchar(40) not null,
+  transaction_id varchar(40) not null,
   api_key varchar(255) not null,
   license_type varchar(255) not null,
   reported_at timestamp not null default now(),
   used_at timestamp not null default now(),
-  data jsonb
+  data jsonb,
+  unique (id)
 );
 
 -- Drop the index if it already exists
