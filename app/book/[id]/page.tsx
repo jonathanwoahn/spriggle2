@@ -128,7 +128,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
               },
             }}
           >
-            {'summary' in blockData.data ? blockData.data.summary : null}
+            {'summary' in blockData.data ? blockData.data.summary : ''}
           </MuiMarkdown>
         </Box>
         <BookCollectionChips bookId={id} />

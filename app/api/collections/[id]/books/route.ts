@@ -19,7 +19,7 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
   if(error) {
     return NextResponse.json({ status: 500, message: error.message });
   }
-  
+
   return NextResponse.json({ ...data});
 
 }

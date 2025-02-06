@@ -3,12 +3,9 @@ import { Box, ButtonBase, Skeleton, Typography } from "@mui/material";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import Image from "next/image";
-import { BOOKS } from "@/utils/constants";
-import BookCoverImage from "./book-cover-image";
 import { useEffect, useState } from "react";
 import CarouselCard from "./carousel-card";
-import { it } from "node:test";
+import { IBlockMetadata } from "@/lib/types";
 
 export interface IBookCarousel {
   // provide a collection ID if you want to display the books associated with a collection
@@ -97,7 +94,7 @@ export default function BookCarousel({...props}: IBookCarousel) {
   const {collectionId, bookId} = props;
 
   const [collection, setCollection] = useState<{description: string, name: string,} | undefined>();
-  const [books, setBooks] = useState<{book_id: string}[]>();
+  const [books, setBooks] = useState<IBlockMetadata[]>();
   
   const settings = {
     ...defaultProps,
@@ -107,23 +104,14 @@ export default function BookCarousel({...props}: IBookCarousel) {
   useEffect(() => {
     const initCollection = async (url: string) => {
       const res = await fetch(url);
+      const { data: {collection, metadata: books}} = await res.json();
 
-      const {collection_books: collectionBooks, ...data} = await res.json();
-
-      setCollection(data);
-      setBooks(collectionBooks);
+      setCollection(collection);
+      setBooks(books);
     }
 
-    let url: string | undefined = undefined;
+    let url = `/api/collections/carousel?` + (collectionId ? `collectionId=${collectionId}` : `bookId=${bookId}`);
     
-    if(collectionId) {
-      url = `/api/collections/${collectionId}/books`;
-    }else if(bookId) {
-      url = `/api/book/${bookId}/similar`;
-    }
-
-    if(!url) return;
-
     initCollection(url);
     
   }, [props.collectionId, props.bookId]);
@@ -134,7 +122,6 @@ export default function BookCarousel({...props}: IBookCarousel) {
         {collection ? (
           <Box sx={{display: 'flex', flexDirection: 'column'}}>
             <Typography variant="h4" sx={{ mb: 1 }}>{collection?.name}</Typography>
-            {/* <Typography variant="body2" sx={{ mb: 2 }}>{collection?.description}</Typography> */}
           </Box>
           
         ) : (
@@ -152,7 +139,7 @@ export default function BookCarousel({...props}: IBookCarousel) {
       }}>
         <Box sx={{ width: '100%' }}>
           <Slider {...settings}>
-            {books?.map((item, idx) => (<CarouselCard bookId={item.book_id} key={idx} />))}
+            {books?.map((book, idx) => (<CarouselCard blockMetadata={book} key={idx} />))}
           </Slider>
         </Box>
       </Box>

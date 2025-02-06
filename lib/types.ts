@@ -73,10 +73,10 @@ export interface IBlockMetadata {
   updated_at?: string;
 }
 
-export interface IResponse {
+export interface IResponse<T = any> {
   message?: string;
-  data?: any;
-  // error?: string;
+  data?: T;
+  status?: number;
 }
 
 export interface IBookData {

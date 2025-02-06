@@ -6,12 +6,6 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
   const {id} = await params;
   const baseUrl = req.nextUrl.origin;
 
-
-  /**
-   * 1. get the query embedding
-   * 2. find matches
-   */
-
   const response = await fetch(`${baseUrl}/api/metadata?bookId=${id}&type=book&limit=1`);
 
   if(!response.ok) {

@@ -2,30 +2,13 @@
 
 import { Box, ButtonBase, Typography } from "@mui/material";
 import BookCoverImage from "./book-cover-image";
-import { useEffect, useState } from "react";
-import { IBookData } from "@/lib/types";
+import { IBlockMetadata } from "@/lib/types";
 
-export default function CarouselCard({bookId}: {bookId: string}) {
-
-  const [book, setBook] = useState<IBookData>();
-
-  useEffect(() => {
-
-    const init = async () => {
-      const res = await fetch(`/api/book/${bookId}`);
-
-      const data = await res.json();
-      setBook(data);
-    }
-
-    init();
-
-  },[bookId]);
-  
+export default function CarouselCard({ blockMetadata }: { blockMetadata: IBlockMetadata}) {
   return (
     <Box component="div" sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', }}>
       <ButtonBase
-        href={"/book/" + bookId}
+        href={"/book/" + blockMetadata.block_id}
         sx={{
           display: 'flex',
           flexDirection: 'column',
@@ -36,7 +19,7 @@ export default function CarouselCard({bookId}: {bookId: string}) {
           p: 2,
           gap: 2,
         }}>
-        <BookCoverImage bookId={bookId} />
+        <BookCoverImage bookId={blockMetadata.book_id} />
         <Box
           component="div"
           sx={{
@@ -51,14 +34,14 @@ export default function CarouselCard({bookId}: {bookId: string}) {
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               display: 'block',
-            }}>{book?.data.title}</Typography>
+            }}>{'title' in blockMetadata.data ? blockMetadata.data.title : 'Untitled'}</Typography>
           <Typography
             variant="caption"
             sx={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-            }}>{book?.data.creators?.join(', ')}</Typography>
+            }}>{'creators' in blockMetadata.data ? blockMetadata.data.creators?.join(', ') : ''}</Typography>
         </Box>
       </ButtonBase>
 
