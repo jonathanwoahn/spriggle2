@@ -54,7 +54,7 @@ export default class Cashmere extends EventEmitter {
   }
 
   // returns omnibook data for a single book
-  async getBook(id: string): Promise<{id: string, data: IOmnibookData}> {
+  async getBook(id: string): Promise<{uuid: string, data: IOmnibookData}> {
     const url: string = `${this._baseURL}/book/${id}`;
     return this._executeRequest(url, 'GET');
   }

@@ -20,8 +20,9 @@ create table public.app_settings (
 -- default populate this table with two entries with the following keys: cashmereApiKey and openAiApiKey. The rest of the values should reflect these keys
 insert into public.app_settings (field, type, value, description, key, order)
 values
-  ('Cashmere API Key', 'string', '', 'API Key for Cashmere', 'cashmereApiKey', 0),
-  ('OpenAI API Key', 'string', '', 'API Key for OpenAI', 'openAiApiKey', 1);
+  ('Cashmere API Key', 'string', '<FILL IN>', 'API Key for Cashmere', 'cashmereApiKey', 0),
+  ('OpenAI API Key', 'string', '<FILL IN>', 'API Key for OpenAI', 'openAiApiKey', 1),
+  ('Admin Email', 'string', '<FILL IN>', 'Email address for the admin', 'adminEmail', 2);
 
 
 

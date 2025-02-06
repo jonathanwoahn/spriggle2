@@ -1,6 +1,7 @@
 import Cashmere from "@/lib/cashmere";
 import { BlockType, IBlockJob, IBlockMetadata, IResponse, JobStatus, JobType } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
+import { IOmnibookData } from "omnibook";
 import { v4 as uuidv4 } from 'uuid';
 
 const processBlock = (block: any, blocks: any[]) => {
@@ -14,15 +15,16 @@ const processBlock = (block: any, blocks: any[]) => {
   return blocks;
 }
 
-const buildBookMetadata = (bookId: string): IBlockMetadata => {
+const buildBookMetadata = ({id, book}: {id: string, book: IOmnibookData}): IBlockMetadata => {
   return {
-    book_id: bookId,
-    block_id: bookId,
+    book_id: id,
+    block_id: id,
     section_order: 0,
     block_index: 0,
     type: BlockType.BOOK,
     data: {
       ready: false,
+      ...book,
     },
   };
 }
@@ -53,7 +55,7 @@ export const POST = async (
     const { id: bookId } = await params;
   
     const jobs: IBlockJob[] = [];
-    const metadata: IBlockMetadata[] = [buildBookMetadata(bookId)];
+    // const metadata: IBlockMetadata[] = [buildBookMetadata(bookId)];
   
     // generate summary and embedding jobs
     const summaryJob = buildJob({bookId, blockId: bookId, jobType: JobType.BOOK_SUMMARY});
@@ -139,6 +141,8 @@ export const POST = async (
     }
 
     // store the metadata in supabase
+    const metadata: IBlockMetadata[] = [buildBookMetadata({id: book.uuid, book: book.data})];
+
     const metaResponse = await fetch(`${baseUrl}/api/metadata`, {
       method: 'POST',
       headers: {

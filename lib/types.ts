@@ -67,7 +67,7 @@ export interface IBlockMetadata {
     start_time?: number;
     summary?: string;
     ready?: boolean;
-  };
+  } | IOmnibookData;
   embedding?: number[];
   created_at?: string;
   updated_at?: string;
