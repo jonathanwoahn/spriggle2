@@ -1,6 +1,6 @@
 -- type should be an enum that can expand. for now, the values to include are "string" and "boolean". create the enum value as well
 
-DROP TYPE public.app_setting_type;
+DROP TYPE IF EXISTS public.app_setting_type;
 create type public.app_setting_type as enum ('string', 'boolean');
 
 -- create settings table. settings table should include the following columns: field (display name of the setting), type (app_setting_type), value (can be anything, will be parsed based on the type), description (description of the field), key (key value of the setting in a form), created_at, updated_at. created at should generate automatically when the entry is added, and updated_at should update every time the field value changes 
@@ -12,18 +12,17 @@ create table public.app_settings (
   value text not null,
   description text not null,
   key varchar(255) not null,
-  order integer not null default 0,
+  "order" integer not null default 0,
   created_at timestamp not null default now(),
   updated_at timestamp not null default now()
 );
 
 -- default populate this table with two entries with the following keys: cashmereApiKey and openAiApiKey. The rest of the values should reflect these keys
-insert into public.app_settings (field, type, value, description, key, order)
+insert into public.app_settings (field, type, value, description, key, "order")
 values
-  ('Cashmere API Key', 'string', '<FILL IN>', 'API Key for Cashmere', 'cashmereApiKey', 0),
-  ('OpenAI API Key', 'string', '<FILL IN>', 'API Key for OpenAI', 'openAiApiKey', 1),
-  ('Admin Email', 'string', '<FILL IN>', 'Email address for the admin', 'adminEmail', 2);
-
+  ('Cashmere API Key', 'string', '', 'API Key for Cashmere', 'cashmereApiKey', 0),
+  ('OpenAI API Key', 'string', '', 'API Key for OpenAI', 'openAiApiKey', 1),
+  ('Admin Email', 'string', 'jonathanwoahn@gmail.com', 'Email address for the admin', 'adminEmail', 2);
 
 
 -- GENERATE JOBS TABLES
@@ -49,28 +48,6 @@ CREATE TABLE public.jobs (
   created_at timestamp not null default now(),
   updated_at timestamp not null default now()
 );
-
--- Drop the index if it already exists
-DROP INDEX IF EXISTS unique_book_block_omnibook;
-
--- Create a unique index on the bookBlockId, omnibookId properties within the data JSONB column, and job_type
-create unique index unique_book_block_omnibook on public.jobs (
-  job_type,
-  (data->>'blockId'),
-  (data->>'bookId')
-);
-
--- Index on jobs table
-DROP INDEX IF EXISTS idx_jobs_book_id;
-CREATE INDEX idx_jobs_book_id ON jobs((data->>'bookId'));
-DROP INDEX IF EXISTS idx_jobs_status;
-CREATE INDEX idx_jobs_status ON jobs(status);
-
--- Index on block_metadata table
-DROP INDEX IF EXISTS idx_block_metadata_book_id;
-CREATE INDEX idx_block_metadata_book_id ON block_metadata(book_id);
-DROP INDEX IF EXISTS idx_block_metadata_block_id;
-CREATE INDEX idx_block_metadata_type ON block_metadata(type);
 
 -- this is just a temporary solution. we'll come back to this later once everyting else is working
 ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
@@ -101,11 +78,6 @@ create table public.collection_books (
 -- build a table that holds audio file metadata. it should include things like book_id, block_id, duration, start_time, section order number, and sequence number
 
 -- make an enum of 'text', 'section' and 'book' for the type column.
-
-
-
-
-
 
 DROP TYPE IF EXISTS public.block_metadata_type;
 CREATE TYPE public.block_metadata_type as enum ('text', 'section', 'book');
@@ -169,8 +141,27 @@ create table public.reporting (
   data jsonb
 );
 
--- create a table to hold the legal docs. it should include the following columns: id, title, content, created_at, updated_at
+-- Drop the index if it already exists
+DROP INDEX IF EXISTS unique_book_block_omnibook;
+create unique index unique_book_block_omnibook on public.jobs (
+  job_type,
+  (data->>'blockId'),
+  (data->>'bookId')
+);
 
+-- Index on jobs table
+DROP INDEX IF EXISTS idx_jobs_book_id;
+CREATE INDEX idx_jobs_book_id ON jobs((data->>'bookId'));
+DROP INDEX IF EXISTS idx_jobs_status;
+CREATE INDEX idx_jobs_status ON jobs(status);
+
+-- Index on block_metadata table
+DROP INDEX IF EXISTS idx_block_metadata_book_id;
+CREATE INDEX idx_block_metadata_book_id ON block_metadata(book_id);
+DROP INDEX IF EXISTS idx_block_metadata_block_id;
+CREATE INDEX idx_block_metadata_type ON block_metadata(type);
+
+-- create a table to hold the legal docs. it should include the following columns: id, title, content, created_at, updated_at
 drop table if exists public.legal_docs;
 create table public.legal_docs (
   id serial primary key,

@@ -45,7 +45,7 @@ export const signInAction = async (formData: FormData, redirect_to?: string) => 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createClient();
-
+  
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -255,10 +255,14 @@ LEFT JOIN metadata_blocks mb ON b.book_id = mb.book_id;
 `;
 
   const {data, error} =  await sb.rpc('execute_sql', { sql: query });
-  const d = data[0];
 
+  if(error) {
+    console.error(error);
+    return;
+  }
+  
   return {
-    ...d,
+    ...data,
     audioCount,
     coreBlocks,
     sections,

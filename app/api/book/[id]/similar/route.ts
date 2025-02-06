@@ -20,6 +20,10 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
   
   const {data: metadata} = await response.json();
 
+  if(!metadata || metadata.length === 0) {
+    return NextResponse.json({error: 'Book metadata not found'}, {status: 404});
+  }
+
   const query = {
     query_embedding: metadata[0].embedding,
     match_count: 10,
