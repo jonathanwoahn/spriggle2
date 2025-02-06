@@ -53,9 +53,7 @@ export const POST = async (
   try {
 
     const { id: bookId } = await params;
-  
     const jobs: IBlockJob[] = [];
-    // const metadata: IBlockMetadata[] = [buildBookMetadata(bookId)];
   
     // generate summary and embedding jobs
     const summaryJob = buildJob({bookId, blockId: bookId, jobType: JobType.BOOK_SUMMARY});

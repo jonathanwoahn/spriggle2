@@ -1,5 +1,5 @@
 import { BlockType, IBlockJob, IBlockMetadata } from "@/lib/types";
-import { IJobResults, updateMetadataAndCompleteJob } from "./helpers";
+import { IJobResults, updateAndCompleteJobFailed, updateMetadataAndCompleteJob } from "./helpers";
 import * as mm from 'music-metadata';
 
 export const convertTextToAudio = async (job: IBlockJob, baseUrl: string): Promise<IJobResults> => {
@@ -62,7 +62,6 @@ export const convertTextToAudio = async (job: IBlockJob, baseUrl: string): Promi
   
     return updateMetadataAndCompleteJob(metadata, job, baseUrl);
   }catch (e) {
-    console.error('ERROR: ', e);
-    throw new Error((e as Error).message);
+    return updateAndCompleteJobFailed({job, baseUrl, message: (e as Error).message});
   }
 }

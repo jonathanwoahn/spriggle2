@@ -1,7 +1,7 @@
 'use client';
 import { Box, Button, Checkbox, CircularProgress, Dialog, DialogContent, DialogTitle, Input, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import SearchIcon from '@mui/icons-material/Search';
 import { useRouter } from "next/navigation";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -140,7 +140,33 @@ export default function BooksTable() {
       label: 'Add to Collections',
       // action: () => setShowCollections(true),
     },
+    {
+      value: 'generate_jobs',
+      label: 'Generate Jobs',
+    },
   ];
+
+  const generateJobs = async () => {
+    setIsProcessing(true);
+
+    try {
+
+      for(let id of selected) {
+        const response = await fetch(`/api/book/${id}/generate-jobs`, {method: 'POST'});
+        
+        if(!response.ok) {
+          console.error(response);
+          return;
+        }
+      }
+
+    }catch(e) {
+      console.log(e);
+    } finally {
+      setIsProcessing(false);
+      setSelected([]);
+    }
+  }
   
   const handleMenuClick = (action: string) => {
     handleClose();
@@ -152,6 +178,9 @@ export default function BooksTable() {
     switch(action) {
       case 'add_to_collections':
         setShowCollections(true);
+        break;
+      case 'generate_jobs':
+        generateJobs()
         break;
     }
 
