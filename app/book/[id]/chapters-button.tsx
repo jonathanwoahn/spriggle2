@@ -4,7 +4,7 @@ import { Button } from "@mui/material";
 import ListIcon from '@mui/icons-material/List';
 import React from "react";
 import ChapterDrawer from "./chapter-drawer";
-import { IBookData } from "./play/[order]/media-player";
+import { IBookData } from "@/lib/types";
 
 export default function ChaptersButton({bookData}: {bookData: IBookData}) {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);

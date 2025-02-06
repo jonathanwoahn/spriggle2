@@ -122,6 +122,18 @@ as $$
   limit least(match_count, 200);
 $$;
 
+-- allows us to run the ingestion query
+CREATE OR REPLACE FUNCTION public.execute_sql(sql text)
+RETURNS jsonb
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  EXECUTE sql INTO result;
+  RETURN result;
+END;
+$$;
 
 
 

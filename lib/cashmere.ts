@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import EventEmitter from "events";
 import { IOmnibookData, uuid } from "omnibook";
-import { IBookData, ILicenseReport } from "./types";
+import { IBookData, ILicenseReport, ILicenseResponse } from "./types";
 
 export default class Cashmere extends EventEmitter {
   private readonly cashmereURL: string = 'https://omnibk.ai';

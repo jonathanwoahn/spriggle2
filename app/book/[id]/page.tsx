@@ -72,7 +72,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
                   <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
                     <Typography variant="h5" component="h5">{bookData?.data.title}</Typography>
                     <Typography variant="body2" component="p">By {(bookData?.data.creators || []).join(', ')}</Typography>
-                    <Typography variant="body2" component="p">{(!!blockData && blockData.data.duration) ? formatDuration2((blockData?.data.duration || 0) / 1000) : null}</Typography>
+                    <Typography variant="body2" component="p">{(!!blockData && 'duration' in blockData.data && blockData.data.duration) ? formatDuration2((blockData?.data.duration || 0) / 1000) : null}</Typography>
                   </Box>
                 </Grid>
               </Grid>
@@ -80,7 +80,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             <Grid size={{xs: 12, md: 4}}>
               <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
                 <Button
-                  disabled={!blockData || !blockData?.data.ready}
+                  disabled={!blockData || !('ready' in blockData.data) || !blockData.data.ready}
                   startIcon={<PlayIcon />}
                   variant="contained"
                   href={`/book/${id}/play/0`}>
@@ -128,7 +128,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
               },
             }}
           >
-            {blockData?.data.summary}
+            {'summary' in blockData.data ? blockData.data.summary : null}
           </MuiMarkdown>
         </Box>
         <BookCollectionChips bookId={id} />

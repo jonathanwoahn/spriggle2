@@ -5,7 +5,7 @@ import Replay30Icon from '@mui/icons-material/Replay30';
 import Forward30Icon from '@mui/icons-material/Forward30';
 import PauseIcon from '@mui/icons-material/Pause';
 import { Box, CircularProgress, IconButton } from '@mui/material';
-import { IBookData } from './media-player';
+import { IBookData } from '@/lib/types';
 
 
 export default function PlayerControls({
@@ -53,7 +53,7 @@ export default function PlayerControls({
       </IconButton> */}
       <IconButton
         onClick={() => skip('next')}
-        disabled={parseInt(order) === bookData.data.nav.length - 1 || isLoading}>
+        disabled={parseInt(order) === (bookData.data.nav?.length ?? 0) - 1 || isLoading}>
         <SkipNextIcon sx={{ fontSize: '2rem' }} />
       </IconButton>
     </Box>

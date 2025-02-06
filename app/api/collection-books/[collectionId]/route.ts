@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async (req: NextRequest, { params }: { params: { collectionId: string } }) => {
-  const { collectionId } = params;
+export const GET = async (req: NextRequest, { params }: { params: Promise<{ collectionId: string }> }) => {
+  const { collectionId } = await params;
 
   const sb = await createClient();
 

@@ -123,9 +123,9 @@ export default function MediaPlayer({ bookData, metadata }: { bookData: IBookDat
   useEffect(() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: bookData.data.title,
-        artist: bookData.data.creators.join(', '),
-        album: bookData.data.nav[parseInt(params.order)].label,
+        title: Array.isArray(bookData.data.title) ? bookData.data.title.join(', ') : bookData.data.title,
+        artist: bookData.data.creators?.join(', ') ?? 'Unknown Artist',
+        album: bookData.data.nav?.[parseInt(params.order)]?.label ?? 'Unknown Album',
         artwork: [
           { src: `https://omnibk.ai/api/v1/book/${bookData.uuid}/cover_image`}
         ]
@@ -169,7 +169,7 @@ export default function MediaPlayer({ bookData, metadata }: { bookData: IBookDat
     const currentOrder = parseInt(params.order);
     const newOrder = dir === 'prev' ? currentOrder - 1 : currentOrder + 1;
     
-    if(newOrder < 0 || newOrder >= bookData.data.nav.length) return;
+    if (!bookData.data.nav || newOrder < 0 || newOrder >= bookData.data.nav.length) return;
     if(isPlaying) {
       audioManagerRef.current?.pause();
       setIsPlaying(false);

@@ -9,8 +9,8 @@ export class PlaybackReporter {
   async reportPlayback(position: number): Promise<void> {
     const findBlock = (position: number): any => {
       return this._metadataBlocks.find((block) => {
-        return block.data.start_time !== undefined && block.data.duration !== undefined &&
-               (block.data.start_time / 1000) <= position && position < ((block.data.start_time + block.data.duration) / 1000);
+        return 'start_time' in block.data && 'duration' in block.data &&
+               (block.data.start_time! / 1000) <= position && position < ((block.data.start_time! + block.data.duration!) / 1000);
       });
     }
 

@@ -2,9 +2,9 @@
 
 import { AppBar, Drawer, IconButton, List, ListItemButton, Toolbar, Typography } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import { IBookData } from "./play/[order]/media-player";
 import { useEffect, useState } from "react";
 import { formatDuration } from "@/lib/utils";
+import { IBookData } from "@/lib/types";
 
 export default function ChapterDrawer({isOpen, setIsOpen, bookData}: {isOpen: boolean, setIsOpen: (isOpen: boolean) => void, bookData: IBookData}) {
   const [blockData, setBlockData] = useState<any>([]);
@@ -37,7 +37,7 @@ export default function ChapterDrawer({isOpen, setIsOpen, bookData}: {isOpen: bo
       </AppBar>
 
       <List>
-        {bookData.data.nav.map((navItem, idx) => (
+        {bookData.data.nav?.map((navItem, idx) => (
           <ListItemButton 
             href={`/book/${bookData.uuid}/play/${navItem.order}`}
             onClick={() => setIsOpen(false)}

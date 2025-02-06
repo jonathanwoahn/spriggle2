@@ -4,10 +4,10 @@ import ListIcon from '@mui/icons-material/List';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { Button, CardActions } from '@mui/material';
 import { useState } from 'react';
-import { IBookData } from './media-player';
 import ChapterDrawer from '../../chapter-drawer';
 import RepeatOneIcon from '@mui/icons-material/RepeatOne';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import { IBookData } from '@/lib/types';
 
 export const SPEEDS = [
   {
