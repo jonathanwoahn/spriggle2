@@ -27,3 +27,11 @@ export const createClient = async () => {
     },
   );
 };
+
+export const isAdmin = async () => {
+  const supabase = await createClient();
+  const { data: {user}} = await supabase.auth.getUser();
+  
+  // TODO: Retrieve this from supabase AppSettings table
+  return !!(user && (user.email === 'jonathanwoahn@gmail.com'));
+}

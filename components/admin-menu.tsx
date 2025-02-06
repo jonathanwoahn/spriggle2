@@ -1,15 +1,15 @@
 'use client';
 
-import { Box, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Paper, Toolbar, useTheme } from "@mui/material";
+import { Box, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Paper, Switch, Toolbar, useTheme } from "@mui/material";
 import HomeIcon from '@mui/icons-material/Home';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { useMenuContext } from "@/context/admin-menu-context";
 import CloseIcon from '@mui/icons-material/Close';
 import WorkIcon from '@mui/icons-material/Work';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import MemoryIcon from '@mui/icons-material/Memory';
 
 const drawerWidth = 240;
 
@@ -34,11 +34,6 @@ export default function AdminMenu() {
       icon: <CollectionsIcon />,
       url: '/admin/collections',
     },
-    // {
-    //   label: 'Tags',
-    //   icon: <CollectionsIcon />,
-    //   url: '/admin/collections',
-    // },
     {
       label: 'Jobs',
       icon: <WorkIcon />,
@@ -70,7 +65,6 @@ export default function AdminMenu() {
             </ListItemText>
           </ListItemButton>
         ))}
-
       </List>
     </Box>
   );

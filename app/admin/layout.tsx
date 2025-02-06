@@ -1,5 +1,5 @@
 import AdminMenu from "@/components/admin-menu";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 import { Box } from "@mui/material";
 import { notFound, redirect } from "next/navigation";
 
@@ -9,11 +9,10 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
 
-  const { data: { user }, } = await supabase.auth.getUser();
-
-  if (!user || user.email !== "jonathanwoahn@gmail.com") {
+  const admin = await isAdmin();
+  console.log('ADMIN: ', admin);
+  if(!admin) {
     return notFound();
   }
   

@@ -5,6 +5,7 @@ import { Box, CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
 import { MenuProvider } from "@/context/admin-menu-context";
 import RegisterServiceWorker from "@/components/book-ingestion/register-service-worker";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 
 // const defaultUrl = process.env.VERCEL_URL
 //   ? `https://${process.env.VERCEL_URL}`
@@ -21,17 +22,20 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
+  const admin = await isAdmin();
+  
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <Box component="body" sx={{height: '100vh'}}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <RegisterServiceWorker />
+          {admin && <RegisterServiceWorker />}
           <MenuProvider>
             <Box component="main" sx={{height: '100vh'}} >
               <TopNav />
