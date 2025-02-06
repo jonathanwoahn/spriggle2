@@ -37,7 +37,6 @@ export default function BookIngestionJobItem({bookId}: {bookId: string}) {
     useEffect(() => {
       const init = async () => {
         const res = await getJobCount({bookId});
-        console.log(res);
 
         const newData = {
           ...data,
