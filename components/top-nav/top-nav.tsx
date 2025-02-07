@@ -1,10 +1,11 @@
 import { AppBar, Box, Button, IconButton, Toolbar } from "@mui/material";
 import HomeIcon from '@mui/icons-material/Home';
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
-import SignOutButton from "./sign-out-button";
+import { createClient, isAdmin } from "@/utils/supabase/server";
+import SignOutButton from "../sign-out-button";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import TopNavMenuButton from "./top-nav-menu-button";
+import ToggleWorker from "./toggle-worker";
 
 const SignInButtons = () => (
   <Box sx={{display: 'flex', flexDirection: 'row', gap: 2}}>
@@ -18,8 +19,7 @@ const SignInButtons = () => (
 );
 
 export default async function TopNav() {
-  const supabase = await createClient();
-  const { data: { user }, } = await supabase.auth.getUser();
+  const admin = await isAdmin();
 
   return (
     <AppBar position="sticky" sx={{top: 0, position: 'sticky',}}>
@@ -31,9 +31,10 @@ export default async function TopNav() {
           <TopNavMenuButton />
         </Box>
         <Box sx={{display: 'flex', gap: 2 }}>
-          {user ? <IconButton href="/admin"> <AdminPanelSettingsIcon /> </IconButton> : null}
+          {admin ? <ToggleWorker /> : null}
+          {admin ? <IconButton href="/admin"> <AdminPanelSettingsIcon /> </IconButton> : null}
           <Box>
-            {user ? <SignOutButton /> : <SignInButtons />}
+            {admin ? <SignOutButton /> : <SignInButtons />}
           </Box>
         </Box>
       </Toolbar>

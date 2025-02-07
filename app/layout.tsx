@@ -1,6 +1,6 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
-import TopNav from "@/components/top-nav";
+import TopNav from "@/components/top-nav/top-nav";
 import { Box, CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
 import { MenuProvider } from "@/context/admin-menu-context";

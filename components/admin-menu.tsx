@@ -9,7 +9,6 @@ import { useMenuContext } from "@/context/admin-menu-context";
 import CloseIcon from '@mui/icons-material/Close';
 import WorkIcon from '@mui/icons-material/Work';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import MemoryIcon from '@mui/icons-material/Memory';
 
 const drawerWidth = 240;
 
