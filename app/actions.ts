@@ -12,7 +12,6 @@ export const signUpAction = async (formData: FormData, redirect_to?: string) => 
   const password = formData.get("password")?.toString();
 
   const supabase = await createClient();
-  // const origin = (await headers()).get("origin");
 
   if (!email || !password) {
     return encodedRedirect(
@@ -26,7 +25,7 @@ export const signUpAction = async (formData: FormData, redirect_to?: string) => 
     email,
     password,
     options: {
-      emailRedirectTo: redirect_to ? `${getServerURL()}/auth/callback?redirect_to=${redirect_to}` : `${origin}/auth/callback`,
+      emailRedirectTo: redirect_to ? `${getServerURL()}/auth/callback?redirect_to=${redirect_to}` : `${getServerURL()}/auth/callback`,
     },
   });
 
@@ -62,7 +61,6 @@ export const signInAction = async (formData: FormData, redirect_to?: string) => 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const supabase = await createClient();
-  // const origin = (await headers()).get("origin");
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {
