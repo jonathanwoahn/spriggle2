@@ -10,7 +10,7 @@ import MuiMarkdown from "mui-markdown";
 import { formatDuration2 } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
 import { IBlockMetadata, IBookData } from "@/lib/types";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
@@ -27,14 +27,8 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     return <div>Book not found</div>;
   }  
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const admin = await isAdmin();
   
-  
-
   const blockResponse = await fetch(`${defaultUrl}/api/metadata?bookId=${bookData.uuid}&type=book`);
   const {data} = (await blockResponse.json());
   const blockData: IBlockMetadata = data[0];
@@ -91,7 +85,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
             </Grid>
           </Grid>
         </Box>
-        {!!user && <BookIngestionStatus bookId={id} />}
+        {!!admin && <BookIngestionStatus bookId={id} />}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
           <MuiMarkdown
             overrides={{
