@@ -49,12 +49,6 @@ export default function JobsTable() {
     setPage(0);
   };
 
-  const handleClick = async () => {
-    setProcessing(true);
-    await fetch(`/api/cron`);
-    setProcessing(false);
-  }
-
   const resetFailedJobs = async () => {
     setProcessing(true);
     await fetch(`/api/jobs/reset-failed-jobs`, { method: 'POST' });
@@ -67,7 +61,6 @@ export default function JobsTable() {
         <Typography variant="h4" >Conversion Jobs</Typography>
         <Box sx={{display: 'flex', flexDirection: 'row', gap: 2}}>
           <Button color="warning" onClick={resetFailedJobs} disabled={processing}>Reset Failed Jobs</Button>
-          <Button variant="contained" onClick={handleClick} disabled={processing}>Process Pending Jobs</Button>
         </Box>
       </Box>
       <Tabs value={selectedTab} onChange={handleTabChange}>

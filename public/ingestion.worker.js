@@ -1,87 +1,37 @@
-console.log('[Service Worker] Loaded');
+console.log('[Ingestion Worker] Loaded');
 
-let isProcessing = false;
+import { dispatcher } from './ingestion/dispatcher.js';
+import { processJobs } from './ingestion/job-processor.js';
+import { EVENTS, state } from './ingestion/state.js';
 
+const CYCLE_TIME = 1000;
+let intervalId;
+
+// Service worker lifecycle, immediately activate the service worker
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installed');
+  console.log('[Ingestion Worker] Installed');
   self.skipWaiting(); // Activate the Service Worker immediately
 });
 
+// Notification the service worker has been activated
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activated');
-  // Perform cleanup or initialization
+  console.log('[Ingestion Worker] Activated');
 });
 
 self.addEventListener('message', async (event) => {
-  const { task, data } = event.data;
+  const { data: action } = event;
+  console.log('[Ingestion Worker] Received message:', action);
 
-  console.log('[Service Worker] Received message:', task, data);
+  await dispatcher(action);
+});
 
-  if (task === 'startProcessing') {
-    console.log('[Service Worker] Starting job processing');
-    await processJobs();
+self.addEventListener(EVENTS.CHANGE_STATE, async (event) => {
+  if (state.isOn) {
+    intervalId = setInterval(processJobs, CYCLE_TIME);
+  }
+
+  if (!state.isOn) {
+    clearInterval(intervalId);
   }
 });
 
-async function getJobs(status) {
-  const url = `/api/jobs?rowsPerPage=100&selectedTab=${status}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  return data;
-}
-
-async function checkWaitingDeps() {
-  const url = `/api/jobs/check-waiting`;
-  const response = await fetch(url, { method: 'POST' });
-  if(!response.ok){
-    throw new Error('Failed to check waiting dependencies');
-  }
-
-  return;
-}
-
-async function processJobs() {
-  console.log('[Service Worker] Processing jobs');
-
-  await checkWaitingDeps();
-
-  const { data, count } = await getJobs('pending');
-
-
-
-  
-
-
-  
-  
-  // while (true) {
-  //   const jobs = await fetchPendingJobs();
-  //   if (jobs.length === 0) {
-  //     console.log('[Service Worker] No pending jobs found. Stopping job processing.');
-  //     break;
-  //   }
-
-  //   for (const job of jobs) {
-  //     const result = await processBook(job);
-  //     console.log('[Service Worker] Processed job:', result);
-  //   }
-
-  //   console.log('[Service Worker] Waiting for 5 seconds before checking again');
-  //   await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before checking again
-  // }
-}
-
-async function fetchPendingJobs() {
-  console.log('[Service Worker] Fetching pending jobs');
-  // Fetch pending jobs from the API
-  const response = await fetch('/api/jobs/pending');
-  const data = await response.json();
-  console.log('[Service Worker] Fetched jobs:', data.jobs);
-  return data.jobs;
-}
-
-async function processBook(job) {
-  // Simulate a book processing task
-  console.log('[Service Worker] Processing book with ID:', job.bookId);
-  return `Processed book with ID: ${job.bookId}`;
-}

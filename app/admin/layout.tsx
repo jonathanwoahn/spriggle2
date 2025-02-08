@@ -11,7 +11,7 @@ export default async function Layout({
 }) {
 
   const admin = await isAdmin();
-  console.log('ADMIN: ', admin);
+
   if(!admin) {
     return notFound();
   }

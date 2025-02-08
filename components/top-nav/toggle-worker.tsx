@@ -1,20 +1,46 @@
 'use client';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import { IconButton, Tooltip } from '@mui/material';
-import { useState } from 'react';
+import { Box, CircularProgress, IconButton, Tooltip } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 export default function ToggleWorker() {
+  const [isOn, setIsOn] = useState<boolean | undefined>();
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const [isOn, setIsOn] = useState(false);
+  useEffect(() => {
+    if('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if(event.data.task === 'state') {
+            setIsOn(event.data.isOn);
+            setIsProcessing(event.data.isProcessing);
+          }
+        });
+
+        navigator.serviceWorker.controller?.postMessage({ task: 'state'});
+      });
+
+    }
+  },[]);
+
+  const handleOnOffClick = (state: boolean) => {
+    if(!navigator.serviceWorker.controller) return;
+
+    navigator.serviceWorker.controller.postMessage({ task: 'changeState', status: state });
+  }
   
   
   return (
-    <Tooltip title={'Toggles the worker on and off. Currently it is ' + (isOn ? 'on' : 'off')}>
-      <IconButton onClick={() => setIsOn(!isOn)}>
-        {isOn ? <RadioButtonCheckedIcon color="success" /> : <RadioButtonUncheckedIcon color="error" />}
-      </IconButton>
-
-    </Tooltip>
+    <Box component="div" sx={{ position: 'relative', display: 'inline-block' }}>
+        <IconButton onClick={() => handleOnOffClick(!isOn)} sx={{zIndex: 1000}} disabled={isOn === undefined}>
+          {isOn ? <RadioButtonCheckedIcon color={isOn === undefined ? undefined : "success"} /> : <RadioButtonUncheckedIcon color={isOn === undefined ? undefined : 'error'} />}
+        </IconButton>
+      {isProcessing && <CircularProgress
+        color="success"
+        thickness={2}
+        size={28}
+        sx={{ position: 'absolute', left: '15%', top: '15%', transform: 'translate(-50%, -50%)',  }} />}
+    </Box>
   );
 }

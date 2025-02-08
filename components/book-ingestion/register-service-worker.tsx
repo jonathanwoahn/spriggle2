@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const SERVICE_WORKER_PATH = '/ingestion.worker.js';
+export const SERVICE_WORKER_PATH = '/ingestion.worker.js';
 
 export default function RegisterServiceWorker() {
 
@@ -14,24 +14,41 @@ export default function RegisterServiceWorker() {
     //   }
     // }
     
+    // const registerServiceWorker = async () => {
+    //   if ('serviceWorker' in navigator) {
+    //     const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_PATH);
+
+    //     if (!registration) {
+    //       // navigator.serviceWorker.register(SERVICE_WORKER_PATH)
+    //       navigator.serviceWorker.register(SERVICE_WORKER_PATH, { type: 'module' })
+    //         .then((registration) => {
+    //           console.log('Service Worker registered with scope:', registration.scope);
+    //         })
+    //         .catch((error) => {
+    //           console.error('Service Worker registration failed:', error);
+    //         });
+    //     }else {
+    //       // startJobProcessing();
+    //     }
+    //   }
+    // };
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_PATH);
-        console.log('register service worker');
-
-        if (!registration) {
-          navigator.serviceWorker.register(SERVICE_WORKER_PATH)
-            .then((registration) => {
-              console.log('Service Worker registered with scope:', registration.scope);
-            })
-            .catch((error) => {
-              console.error('Service Worker registration failed:', error);
-            });
-        }else {
-          // startJobProcessing();
+        try {
+          const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_PATH);
+          if (!registration) {
+            const newRegistration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH, { type: 'module', scope: '/' });
+            // const newRegistration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH);
+            console.log('Service Worker registered with scope:', newRegistration.scope);
+          } else {
+            console.log('Service Worker already registered with scope:', registration.scope);
+          }
+        } catch (error) {
+          console.error('Service Worker registration failed:', error);
         }
       }
     };
+    
 
     registerServiceWorker();
   }, []);

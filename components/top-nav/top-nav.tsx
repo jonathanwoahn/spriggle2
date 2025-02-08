@@ -1,6 +1,5 @@
 import { AppBar, Box, Button, IconButton, Toolbar } from "@mui/material";
 import HomeIcon from '@mui/icons-material/Home';
-import Link from "next/link";
 import { createClient, isAdmin } from "@/utils/supabase/server";
 import SignOutButton from "../sign-out-button";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
