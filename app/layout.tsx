@@ -7,16 +7,6 @@ import { MenuProvider } from "@/context/admin-menu-context";
 import RegisterServiceWorker from "@/components/book-ingestion/register-service-worker";
 import { createClient, isAdmin } from "@/utils/supabase/server";
 
-// const defaultUrl = process.env.VERCEL_URL
-//   ? `https://${process.env.VERCEL_URL}`
-//   : "http://localhost:3000";
-
-// export const metadata = {
-//   metadataBase: new URL(defaultUrl),
-//   title: "Spriggle | AI Powered Audiobooks for Kids",
-//   description: "The fastest way to build apps with Next.js and Supabase",
-// };
-
 const geistSans = Geist({
   display: "swap",
   subsets: ["latin"],

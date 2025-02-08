@@ -3,6 +3,7 @@ import MediaPlayer from "./media-player";
 import { isUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { getServerURL } from "@/lib/utils";
 
 export default async function PlayBookPage({ params }: { params: Promise<{ id: string, order: string }> }) {
   const user = await isUser();
@@ -17,12 +18,7 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
   
   const { id, order } = await params;
   
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  
-  const url = `${defaultUrl}/api/book/${id}`;
+  const url = `${getServerURL()}/api/book/${id}`;
   const response = await fetch(url);
 
   if(!response.ok) {
@@ -31,7 +27,7 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
   
   const bookData = await response.json();
   
-  const res = await fetch(`${defaultUrl}/api/metadata?bookId=${id}&type=text&sectionOrder=${order}`);
+  const res = await fetch(`${getServerURL()}/api/metadata?bookId=${id}&type=text&sectionOrder=${order}`);
   if(!res.ok) {
     throw new Error(`Failed to fetch metadata: ${res.statusText}`);
   }

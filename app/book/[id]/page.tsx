@@ -7,7 +7,7 @@ import ChaptersButton from "./chapters-button";
 import BookCoverImage from "@/components/book-cover-image";
 import BookCollectionChips from "./book-collection-chips";
 import MuiMarkdown from "mui-markdown";
-import { formatDuration2 } from "@/lib/utils";
+import { formatDuration2, getServerURL } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
 import { IBlockMetadata, IBookData } from "@/lib/types";
 import { createClient, isAdmin } from "@/utils/supabase/server";
@@ -15,11 +15,7 @@ import { createClient, isAdmin } from "@/utils/supabase/server";
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
 
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  const url = `${defaultUrl}/api/book/${id}`;
+  const url = `${getServerURL()}/api/book/${id}`;
   const response = await fetch(url);
   const bookData: IBookData = await response.json();
   
@@ -29,7 +25,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
 
   const admin = await isAdmin();
   
-  const blockResponse = await fetch(`${defaultUrl}/api/metadata?bookId=${bookData.uuid}&type=book`);
+  const blockResponse = await fetch(`${getServerURL()}/api/metadata?bookId=${bookData.uuid}&type=book`);
   const {data} = (await blockResponse.json());
   const blockData: IBlockMetadata = data[0];
 

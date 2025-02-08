@@ -1,14 +1,9 @@
 import Cashmere from "@/lib/cashmere";
+import { getServerURL } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-
-  
-  const keyResponse = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const keyResponse = await fetch(`${getServerURL()}/api/settings/cashmereApiKey`);
   const { value } = await keyResponse.json();
   
   const cash = new Cashmere(value);

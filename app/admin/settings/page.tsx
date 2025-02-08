@@ -1,13 +1,9 @@
 import { Box, Typography } from "@mui/material";
 import SettingsForm from "./settings-form";
+import { getServerURL } from "@/lib/utils";
 
 export default async function SettingsPage() {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-
-  const response = await fetch(`${defaultUrl}/api/settings`);
+  const response = await fetch(`${getServerURL()}/api/settings`);
   if(!response.ok) {
     throw new Error('missing');
   }

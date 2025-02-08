@@ -1,14 +1,11 @@
 import { IResponse } from "@/lib/types";
+import { getServerURL } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from 'uuid';
 
 export const POST = async (req: Request): Promise<NextResponse<IResponse>> => {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  const keyResponse = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const keyResponse = await fetch(`${getServerURL()}/api/settings/cashmereApiKey`);
   if(!keyResponse.ok) {
     return NextResponse.json({message: 'Unable to get the Cashmere API key'}, {status: 500});
   }

@@ -5,13 +5,14 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Cashmere from "@/lib/cashmere";
+import { getServerURL } from "@/lib/utils";
 
 export const signUpAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
 
   const supabase = await createClient();
-  const origin = (await headers()).get("origin");
+  // const origin = (await headers()).get("origin");
 
   if (!email || !password) {
     return encodedRedirect(
@@ -25,7 +26,7 @@ export const signUpAction = async (formData: FormData, redirect_to?: string) => 
     email,
     password,
     options: {
-      emailRedirectTo: redirect_to ? `${origin}/auth/callback?redirect_to=${redirect_to}` : `${origin}/auth/callback`,
+      emailRedirectTo: redirect_to ? `${getServerURL()}/auth/callback?redirect_to=${redirect_to}` : `${origin}/auth/callback`,
     },
   });
 
@@ -61,7 +62,7 @@ export const signInAction = async (formData: FormData, redirect_to?: string) => 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const supabase = await createClient();
-  const origin = (await headers()).get("origin");
+  // const origin = (await headers()).get("origin");
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {
@@ -69,7 +70,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
+    redirectTo: `${getServerURL()}/auth/callback?redirect_to=/protected/reset-password`,
   });
 
   if (error) {
@@ -146,12 +147,7 @@ export interface ISetting {
 }
 
 export const saveSettings = async (settings: ISetting[]) => {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-
-  await fetch(`${defaultUrl}/api/settings`, {
+  await fetch(`${getServerURL()}/api/settings`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -161,13 +157,9 @@ export const saveSettings = async (settings: ISetting[]) => {
 }
 
 export const getJobCount = async ({bookId }: { bookId: string }) => {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
 
   // get the cashmere api key
-  const response = await fetch(`${defaultUrl}/api/settings/cashmereApiKey`);
+  const response = await fetch(`${getServerURL()}/api/settings/cashmereApiKey`);
   const { value } = await response.json();
 
   const cash = new Cashmere(value);
