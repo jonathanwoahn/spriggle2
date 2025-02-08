@@ -38,7 +38,7 @@ export const signUpAction = async (formData: FormData, redirect_to?: string) => 
     return encodedRedirect(
       "success",
       "/sign-up",
-      `Thanks for signing up! An email has been sent to ${email}. Please verify your account so you can access Spriggle!`,
+      `Thanks for signing up! An email has been sent to "${email}". Please verify your account so you can access Spriggle!`,
     );
   }
 };
