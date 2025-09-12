@@ -6,7 +6,7 @@ import { IBookData, ILicenseReport, ILicenseResponse } from "./types";
 export default class Cashmere extends EventEmitter {
   private readonly cashmereURL: string = 'https://omnibk.ai';
   private readonly path: string = '/api';
-  private readonly version: string = '/v1';
+  private readonly version: string = '/v2';
   private headers: Headers = new Headers();
   
   constructor(private readonly _cashmereAPIKey: string) {
@@ -55,19 +55,19 @@ export default class Cashmere extends EventEmitter {
 
   // returns omnibook data for a single book
   async getBook(id: string): Promise<{uuid: string, data: IOmnibookData}> {
-    const url: string = `${this._baseURL}/book/${id}`;
+    const url: string = `${this._baseURL}/omnipub/${id}`;
     return this._executeRequest(url, 'GET');
   }
   
   // DEPRECATED. This still works, but no longer necessary.
   async getBookCoverURL(id: string): Promise<string> {
-    const url: string = `${this._baseURL}/book/${id}/cover_image`;
+    const url: string = `${this._baseURL}/omnipub/${id}/cover_image`;
     return this._executeRequest(url, 'GET');
   }
 
   // returns all of the blocks for a section, in the standard API format
   async getBookSection(id: string, order: number, format: 'json' | 'html' = 'json'): Promise<any> {
-    const url: string = `${this._baseURL}/book/${id}/section/${order}/${format}`;
+    const url: string = `${this._baseURL}/omnipub/${id}/section/${order}/${format}`;
     return this._executeRequest(url, 'GET');
   }
 
@@ -109,7 +109,7 @@ export default class Cashmere extends EventEmitter {
 
   // returns a single book block
   async getBookBlock(bookId: string, blockId: string): Promise<any> {
-    const url: string = `${this._baseURL}/book/${bookId}/block/${blockId}`;
+    const url: string = `${this._baseURL}/omnipub/${bookId}/block/${blockId}`;
 
     return this._executeRequest(url, 'GET');
   }
