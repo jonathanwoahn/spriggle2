@@ -3,21 +3,29 @@ import { processSection } from "./process-section";
 import { generateSummary } from "./generate-summary";
 import { generateEmbedding } from "./generate-embedding";
 
+import type { TTSProvider, TTSModel } from "@/lib/tts-provider";
+
 interface IngestBookPayload {
   bookId: string;
   voiceId: string;
   voiceName?: string;
+  provider: TTSProvider;
+  model?: TTSModel;
+  selectedSections?: number[]; // Optional array of section orders to process
 }
 
 export const ingestBook = task({
   id: "ingest-book",
   maxDuration: 3600, // 1 hour for full book ingestion
-  run: async ({ bookId, voiceId, voiceName }: IngestBookPayload) => {
+  run: async ({ bookId, voiceId, voiceName, provider, model, selectedSections }: IngestBookPayload) => {
     const startTime = Date.now();
     logger.info("=== STARTING BOOK INGESTION ===", {
       bookId,
       voiceId,
       voiceName,
+      provider,
+      model,
+      selectedSections: selectedSections || 'all',
       timestamp: new Date().toISOString(),
     });
 
@@ -62,16 +70,25 @@ export const ingestBook = task({
     // Store voice selection with isDefault flag
     const existingVoice = await db.select()
       .from(bookVoices)
-      .where(and(eq(bookVoices.bookId, bookId), eq(bookVoices.voiceId, voiceId)));
+      .where(and(
+        eq(bookVoices.bookId, bookId),
+        eq(bookVoices.voiceId, voiceId),
+        eq(bookVoices.provider, provider)
+      ));
 
     if (existingVoice.length > 0) {
       await db.update(bookVoices)
         .set({ voiceName, status: 'processing', isDefault: true, updatedAt: new Date() })
-        .where(and(eq(bookVoices.bookId, bookId), eq(bookVoices.voiceId, voiceId)));
+        .where(and(
+          eq(bookVoices.bookId, bookId),
+          eq(bookVoices.voiceId, voiceId),
+          eq(bookVoices.provider, provider)
+        ));
     } else {
       await db.insert(bookVoices).values({
         bookId,
         voiceId,
+        provider,
         voiceName,
         isDefault: true,
         status: 'processing',
@@ -98,10 +115,11 @@ export const ingestBook = task({
 
       const cashmere = new Cashmere(apiKeySetting[0].value);
       const book = await cashmere.getBook(bookId);
+      const navItems = book.data.nav || [];
       logger.info("[Step 2] Book data fetched successfully", {
         bookId: book.uuid,
         hasNav: !!book.data.nav,
-        navLength: book.data.nav?.length || 0,
+        navLength: navItems.length,
       });
 
       // Extract book metadata with proper type handling
@@ -131,6 +149,13 @@ export const ingestBook = task({
 
       // Step 3: Store omnipub metadata in dedicated table
       logger.info("[Step 3] Storing book metadata in omnipubs table");
+      // Store nav items for chapters drawer
+      const navData = navItems.map((nav: any) => ({
+        order: nav.order,
+        label: nav.label,
+        matter: nav.matter || nav.type,
+      }));
+
       if (existingOmnipub.length > 0) {
         await db.update(omnipubs)
           .set({
@@ -139,6 +164,7 @@ export const ingestBook = task({
             creators: bookCreators,
             publisher: bookPublisher,
             coverImage: coverImageUrl,
+            nav: navData,
             updatedAt: new Date(),
           })
           .where(eq(omnipubs.uuid, bookId));
@@ -150,6 +176,7 @@ export const ingestBook = task({
           creators: bookCreators,
           publisher: bookPublisher,
           coverImage: coverImageUrl,
+          nav: navData,
         });
       }
 
@@ -164,32 +191,43 @@ export const ingestBook = task({
       });
       logger.info("[Step 4] License usage recorded");
 
-      // Step 5: Filter to BODY matter only (exclude front/back matter)
-      logger.info("[Step 5] Filtering sections for body matter");
-      const navItems = book.data.nav || [];
-      const bodyNavItems = navItems.filter((nav: any) => {
-        // Check for matter type - allow 'body' or undefined (default to body)
-        const matter = nav.matter || nav.type || 'body';
-        return matter === 'body' || matter === 'bodymatter';
+      // Step 5: Filter sections based on selectedSections or body matter
+      logger.info("[Step 5] Filtering sections", {
+        hasSelectedSections: !!selectedSections?.length,
+        selectedSectionOrders: selectedSections,
       });
 
-      // If no body items found, process all items (fallback)
-      const itemsToProcess = bodyNavItems.length > 0 ? bodyNavItems : navItems;
+      let itemsToProcess;
+      if (selectedSections && selectedSections.length > 0) {
+        // Use explicitly selected sections
+        itemsToProcess = navItems.filter((nav: any) =>
+          selectedSections.includes(nav.order)
+        );
+        logger.info("[Step 5] Using user-selected sections", {
+          selected: selectedSections.length,
+          matched: itemsToProcess.length,
+        });
+      } else {
+        // Fall back to body matter filtering
+        const bodyNavItems = navItems.filter((nav: any) => {
+          const matter = nav.matter || nav.type || 'body';
+          return matter === 'body' || matter === 'bodymatter';
+        });
+        // If no body items found, process all items
+        itemsToProcess = bodyNavItems.length > 0 ? bodyNavItems : navItems;
+        logger.info("[Step 5] Using body matter filtering", {
+          bodyItems: bodyNavItems.length,
+          total: navItems.length,
+        });
+      }
 
-      // Update total sections count (only body sections)
+      // Update total sections count
       const totalSections = itemsToProcess.length;
       await db.update(ingestionStatus)
         .set({ totalSections, updatedAt: new Date() })
         .where(eq(ingestionStatus.bookId, bookId));
 
-      logger.info("[Step 5] Section filtering complete", {
-        totalNavItems: navItems.length,
-        bodyNavItems: bodyNavItems.length,
-        itemsToProcess: itemsToProcess.length,
-        usingFallback: bodyNavItems.length === 0,
-      });
-
-      // Step 6: Process all body sections in parallel
+      // Step 6: Process all sections in parallel
       // Each section processes its blocks sequentially with request stitching,
       // but sections themselves are independent and can run concurrently
       logger.info("[Step 6] Preparing section processing payloads");
@@ -198,6 +236,8 @@ export const ingestBook = task({
           bookId,
           sectionOrder: navItem.order,
           voiceId,
+          provider,
+          model,
         },
       }));
 
@@ -272,7 +312,11 @@ export const ingestBook = task({
       // Update voice status to completed
       await db.update(bookVoices)
         .set({ status: 'completed', updatedAt: new Date() })
-        .where(and(eq(bookVoices.bookId, bookId), eq(bookVoices.voiceId, voiceId)));
+        .where(and(
+          eq(bookVoices.bookId, bookId),
+          eq(bookVoices.voiceId, voiceId),
+          eq(bookVoices.provider, provider)
+        ));
 
       // Update ingestion status to completed
       await db.update(ingestionStatus)
@@ -318,7 +362,11 @@ export const ingestBook = task({
       // Update voice status to failed
       await db.update(bookVoices)
         .set({ status: 'failed', updatedAt: new Date() })
-        .where(and(eq(bookVoices.bookId, bookId), eq(bookVoices.voiceId, voiceId)));
+        .where(and(
+          eq(bookVoices.bookId, bookId),
+          eq(bookVoices.voiceId, voiceId),
+          eq(bookVoices.provider, provider)
+        ));
 
       throw error;
     }

@@ -1,131 +1,169 @@
 import BookCarousel, { IBookCarousel } from "@/components/book-carousel";
-import { Box, Button, Typography } from "@mui/material";
-import PlayIcon from "@mui/icons-material/PlayArrow";
+import { Box, Typography } from "@mui/material";
+import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import Footer from "@/components/footer/footer";
-import { Grid2 as Grid } from '@mui/material';
-import ChaptersButton from "./chapters-button";
-import BookCoverImage from "@/components/book-cover-image";
+import BookDetailHero from "@/components/book-detail-hero";
 import BookCollectionChips from "./book-collection-chips";
 import MuiMarkdown from "mui-markdown";
 import { formatDuration2, getServerURL } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
-import { IBlockMetadata, IBookData } from "@/lib/types";
-import { createClient, isAdmin } from "@/utils/supabase/server";
+import { IBlockMetadata } from "@/lib/types";
+import { isAdmin } from "@/lib/auth";
+import { CoverColors } from "@/lib/extract-colors";
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
 
-  const url = `${getServerURL()}/api/book/${id}`;
-  const response = await fetch(url);
-  const bookData: IBookData = await response.json();
-  
-  if (!bookData) {
-    return <div>Book not found</div>;
-  }  
-
   const admin = await isAdmin();
-  
-  const blockResponse = await fetch(`${getServerURL()}/api/metadata?bookId=${bookData.uuid}&type=book`);
+
+  // Fetch book metadata and colors in parallel
+  const [blockResponse, colorsResponse] = await Promise.all([
+    fetch(`${getServerURL()}/api/metadata?blockId=${id}&type=book`),
+    fetch(`${getServerURL()}/api/book/${id}/extract-colors`),
+  ]);
+
   const {data} = (await blockResponse.json());
-  const blockData: IBlockMetadata = data[0];
+  const blockData: IBlockMetadata = data?.[0];
+
+  // Get colors (will be extracted on-demand if not cached)
+  let coverColors: CoverColors | null = null;
+  try {
+    const colorsData = await colorsResponse.json();
+    coverColors = colorsData.colors || null;
+  } catch {
+    // Colors extraction failed, will use client-side fallback
+  }
+
+  if (!blockData) {
+    return (
+      <Box sx={{
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #9966FF 0%, #FF8866 100%)',
+      }}>
+        <Typography variant="h5" sx={{ color: 'white' }}>Book not found</Typography>
+      </Box>
+    );
+  }
+
+  // Extract book info from local metadata
+  const bookData = {
+    uuid: blockData.bookId,
+    data: blockData.data as any,
+  };
+
+  const bookMetaData = blockData.data as Record<string, unknown>;
+  const duration = (bookMetaData.duration && typeof bookMetaData.duration === 'number')
+    ? formatDuration2((bookMetaData.duration || 0) / 1000)
+    : null;
+
+  const isReady = blockData && bookMetaData.ready === true;
+  const summary = typeof bookMetaData.summary === 'string' ? bookMetaData.summary : null;
 
   const carouselSettings: Partial<IBookCarousel> = {
     slidesToShow: 3,
     responsive: [
-      {
-        breakpoint: 550,
-        settings: {
-          slidesToShow: 1,
-        },
-      },
-      {
-        breakpoint: 750,
-        settings: {
-          slidesToShow: 2,
-        },
-      },
+      { breakpoint: 550, settings: { slidesToShow: 1 } },
+      { breakpoint: 750, settings: { slidesToShow: 2 } },
     ],
   };
+
   return (
     <>
-      <Box sx={{ width: '100%', maxWidth: '840px', marginLeft: 'auto', marginRight: 'auto', }}>
-        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', p: 2, pt: 8, }}>
-          <Grid container sx={{width: '100%'}}>
-            <Grid size={{xs: 12, md: 8}}>
-              <Grid container>
-                <Grid size={{xs: 12, md: 5}}>
-                  <Box sx={{display: 'flex', justifyContent: 'center', }}>
-                    <BookCoverImage bookId={bookData.uuid} />
-                  </Box>
-                </Grid>
-                <Grid size={{xs: 12, md: 7}}>
-                  <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1, p: {xs: 0, md: 2}, pt: {xs: 4},}}>
-                    <Typography variant="h5" component="h5">{bookData?.data.title}</Typography>
-                    <Typography variant="body2" component="p">By {(bookData?.data.creators || []).join(', ')}</Typography>
-                    <Typography variant="body2" component="p">{(!!blockData && 'duration' in blockData.data && blockData.data.duration) ? formatDuration2((blockData?.data.duration || 0) / 1000) : null}</Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid size={{xs: 12, md: 4}}>
-              <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 2, pt: 2, pb: 2, }}>
-                <Button
-                  disabled={!blockData || !('ready' in blockData.data) || !blockData.data.ready}
-                  startIcon={<PlayIcon />}
-                  variant="contained"
-                  href={`/book/${id}/play/0`}>
-                    Play
-                </Button>
-                <ChaptersButton bookData={bookData} />
-              </Box>
-            </Grid>
-          </Grid>
+      {/* Hero Section with Dynamic Gradient */}
+      <BookDetailHero
+        bookId={bookData.uuid}
+        title={bookData.data.title}
+        creators={bookData.data.creators}
+        duration={duration}
+        isReady={isReady}
+        bookData={bookData}
+        coverColors={coverColors}
+      />
+
+      {/* Admin Section */}
+      {!!admin && (
+        <Box sx={{ maxWidth: '900px', mx: 'auto', px: 2, py: 2 }}>
+          <BookIngestionStatus bookId={id} />
         </Box>
-        {!!admin && <BookIngestionStatus bookId={id} />}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, }}>
-          <MuiMarkdown
-            overrides={{
-              h3: {
-                component: Typography,
-                props: {
-                  variant: 'h4',
-                  sx: {
-                    mb: 2,
-                  },
-                },
-              },
-              h4: {
-                component: Typography,
-                props: {
-                  variant: 'h5',
-                  sx: {
-                    mb: 1,
-                  },
-                },
-              },
-              h5: {
-                component: Typography,
-                props: {
-                  variant: 'h6',
-                },
-              },
-              p: {
-                component: Typography,
-                props: {
-                  variant: 'body1',
-                  paragraph: true,
-                },
-              },
+      )}
+
+      {/* Summary Section */}
+      <Box
+        sx={{
+          maxWidth: '900px',
+          mx: 'auto',
+          px: { xs: 3, md: 4 },
+          py: { xs: 4, md: 6 },
+        }}
+      >
+        {summary && (
+          <Box
+            sx={{
+              background: 'linear-gradient(135deg, rgba(153,102,255,0.05) 0%, rgba(255,136,102,0.05) 100%)',
+              borderRadius: 4,
+              p: { xs: 3, md: 4 },
+              border: '1px solid rgba(153,102,255,0.1)',
             }}
           >
-            {'summary' in blockData.data ? blockData.data.summary : ''}
-          </MuiMarkdown>
-        </Box>
-        <BookCollectionChips bookId={id} />
-        <Box sx={{ p: 2 }}>
-          <BookCarousel {...carouselSettings} bookId={id} />
-        </Box>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                mb: 3,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: '#9966FF',
+              }}
+            >
+              <MenuBookRoundedIcon /> About This Book
+            </Typography>
+            <MuiMarkdown
+              overrides={{
+                h3: {
+                  component: Typography,
+                  props: { variant: 'h5', sx: { mb: 2, fontWeight: 600 } },
+                },
+                h4: {
+                  component: Typography,
+                  props: { variant: 'h6', sx: { mb: 1, fontWeight: 600 } },
+                },
+                h5: {
+                  component: Typography,
+                  props: { variant: 'subtitle1', sx: { fontWeight: 600 } },
+                },
+                p: {
+                  component: Typography,
+                  props: { variant: 'body1', paragraph: true, sx: { lineHeight: 1.8 } },
+                },
+              }}
+            >
+              {summary}
+            </MuiMarkdown>
+          </Box>
+        )}
       </Box>
+
+      {/* Collections */}
+      <Box sx={{ maxWidth: '900px', mx: 'auto', px: 2 }}>
+        <BookCollectionChips bookId={id} />
+      </Box>
+
+      {/* Similar Books Carousel */}
+      <Box
+        sx={{
+          maxWidth: '900px',
+          mx: 'auto',
+          px: 2,
+          py: 4,
+        }}
+      >
+        <BookCarousel {...carouselSettings} bookId={id} />
+      </Box>
+
       <Footer />
     </>
   );

@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import MediaPlayer from "./media-player";
-import { isUser } from "@/utils/supabase/server";
+import AccentColorSetter from "@/components/accent-color-setter";
+import { isUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getServerURL } from "@/lib/utils";
@@ -34,9 +35,30 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
 
   const { data: metadata } = await res.json();
 
+  // Fetch voice info for this book
+  let voiceName: string | null = null;
+  try {
+    const voiceRes = await fetch(`${getServerURL()}/api/book/${id}/voice`);
+    if (voiceRes.ok) {
+      const { voice } = await voiceRes.json();
+      voiceName = voice?.voiceName || null;
+    }
+  } catch {
+    // Voice info is optional, don't fail if it can't be fetched
+  }
+
   return (
-    <Box sx={{p: 2, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto',}}>
-      <MediaPlayer bookData={bookData} metadata={metadata} />
+    <Box
+      sx={{
+        height: 'calc(100dvh - 64px)', // Account for navbar
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: '#fafafa',
+        overflow: 'hidden',
+      }}
+    >
+      <AccentColorSetter bookId={id} />
+      <MediaPlayer bookData={bookData} metadata={metadata} voiceName={voiceName} />
     </Box>
   );
 }

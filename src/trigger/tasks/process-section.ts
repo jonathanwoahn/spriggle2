@@ -1,9 +1,13 @@
 import { task, logger } from "@trigger.dev/sdk/v3";
+import { processBlock, type ProcessBlockResult } from "./process-block";
+import type { TTSProvider, TTSModel } from "@/lib/tts-provider";
 
 interface ProcessSectionPayload {
   bookId: string;
   sectionOrder: number;
   voiceId: string;
+  provider: TTSProvider;
+  model?: TTSModel;
 }
 
 interface TextBlock {
@@ -17,17 +21,21 @@ interface TextBlock {
 
 export const processSection = task({
   id: "process-section",
-  maxDuration: 600, // 10 minutes per section
+  maxDuration: 1800, // 30 minutes per section
   run: async ({
     bookId,
     sectionOrder,
     voiceId,
+    provider,
+    model,
   }: ProcessSectionPayload) => {
     const startTime = Date.now();
     logger.info("=== STARTING SECTION PROCESSING ===", {
       bookId,
       sectionOrder,
       voiceId,
+      provider,
+      model,
       timestamp: new Date().toISOString(),
     });
 
@@ -37,60 +45,61 @@ export const processSection = task({
     const { eq, and } = await import("drizzle-orm");
     const { v4: uuidv4 } = await import("uuid");
 
-    // Get API keys
-    logger.info("[Section] Fetching API keys");
-    const [cashmereKeySetting, elevenLabsKeySetting] = await Promise.all([
-      db.select().from(appSettings).where(eq(appSettings.key, 'cashmereApiKey')),
-      db.select().from(appSettings).where(eq(appSettings.key, 'elevenLabsApiKey')),
-    ]);
+    // Get Cashmere API key for fetching blocks
+    logger.info("[Section] Fetching Cashmere API key");
+    const [cashmereKeySetting] = await db.select()
+      .from(appSettings)
+      .where(eq(appSettings.key, 'cashmereApiKey'));
 
-    if (!cashmereKeySetting.length || !cashmereKeySetting[0].value) {
+    if (!cashmereKeySetting?.value) {
       logger.error("[Section] FAILED: Cashmere API key not configured");
       throw new Error("Cashmere API key not configured");
     }
-    if (!elevenLabsKeySetting.length || !elevenLabsKeySetting[0].value) {
-      logger.error("[Section] FAILED: ElevenLabs API key not configured");
-      throw new Error("ElevenLabs API key not configured");
-    }
-    logger.info("[Section] API keys retrieved successfully");
+    logger.info("[Section] Cashmere API key retrieved successfully");
 
-    // Initialize clients
+    // Initialize Cashmere client
     const { default: Cashmere } = await import("@/lib/cashmere");
-    const { ElevenLabsService } = await import("@/lib/elevenlabs-service");
     const { uploadFile } = await import("@/lib/storage");
-
-    const cashmere = new Cashmere(cashmereKeySetting[0].value);
-    const elevenLabs = new ElevenLabsService(elevenLabsKeySetting[0].value);
-
-    // Reset ElevenLabs context for this section
-    elevenLabs.resetContext();
+    const cashmere = new Cashmere(cashmereKeySetting.value);
 
     // 1. Fetch blocks from Cashmere
     logger.info("[Section] Fetching blocks from Cashmere", { bookId, sectionOrder });
     const blocks = await cashmere.getSectionBookBlocks(bookId, `${sectionOrder}`);
     logger.info("[Section] Blocks fetched", { totalBlocks: blocks.length });
 
+    // Helper to safely extract text from block (handles string or array)
+    const getBlockText = (block: TextBlock): string => {
+      const text = block.properties?.text;
+      const content = block.properties?.content;
+
+      // Handle array case (Cashmere sometimes returns text as array)
+      if (Array.isArray(text)) {
+        return text.join(' ').trim();
+      }
+      if (Array.isArray(content)) {
+        return content.join(' ').trim();
+      }
+
+      // Handle string case
+      if (typeof text === 'string') {
+        return text.trim();
+      }
+      if (typeof content === 'string') {
+        return content.trim();
+      }
+
+      return '';
+    };
+
     // Filter for blocks that have text content
-    // Include paragraph, text, heading, and other content types
     const textBlockTypes = ['text', 'paragraph', 'heading', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'quote', 'blockquote'];
     const textBlocks: TextBlock[] = blocks.filter((block: TextBlock) => {
-      // Include if it's a known text type OR if it has text content
-      const hasText = block.properties?.text?.trim();
+      const hasText = getBlockText(block);
       const isTextType = textBlockTypes.includes(block.type);
       return hasText || isTextType;
-    }).filter((block: TextBlock) => block.properties?.text?.trim()); // Final filter to ensure text exists
+    }).filter((block: TextBlock) => getBlockText(block));
 
     logger.info(`Found ${textBlocks.length} text blocks from ${blocks.length} total blocks`);
-
-    if (textBlocks.length === 0) {
-      logger.info("No text blocks in section, skipping");
-      return { success: true, sectionOrder, blocksProcessed: 0 };
-    }
-
-    // Helper to extract text from block
-    const getBlockText = (block: TextBlock): string => {
-      return block.properties?.text || block.properties?.content || '';
-    };
 
     // 2. Report storage license usage
     const storageReports = textBlocks.map((block) => ({
@@ -110,9 +119,121 @@ export const processSection = task({
         eq(blockTimestamps.voiceId, voiceId)
       ));
 
-    // 4. Process each block with request stitching
-    logger.info("Processing blocks with request stitching");
+    // 4. Process blocks based on provider
+    logger.info(`Processing ${textBlocks.length} blocks with ${provider} provider`, {
+      executionMode: provider === 'openai' ? 'PARALLEL' : 'SEQUENTIAL',
+    });
 
+    let blockResults: ProcessBlockResult[];
+    const requestIds: string[] = [];
+
+    if (provider === 'openai') {
+      // OpenAI: Process blocks in parallel (no stitching support)
+      logger.info("[OpenAI] Starting parallel block processing");
+
+      const blockPayloads = textBlocks
+        .map((block, index) => {
+          const blockText = getBlockText(block);
+          if (!blockText.trim()) return null;
+          return {
+            payload: {
+              bookId,
+              sectionOrder,
+              blockIndex: index,
+              blockId: block.uuid,
+              blockText,
+              voiceId,
+              provider,
+              model,
+            },
+          };
+        })
+        .filter((p): p is NonNullable<typeof p> => p !== null);
+
+      if (blockPayloads.length === 0) {
+        logger.info("[OpenAI] No blocks to process");
+        blockResults = [];
+      } else {
+        logger.info(`[OpenAI] Triggering ${blockPayloads.length} block tasks in parallel`);
+        const results = await processBlock.batchTriggerAndWait(blockPayloads);
+
+        // Sort results by blockIndex to maintain order
+        blockResults = results.runs
+          .filter((r): r is typeof r & { ok: true; output: ProcessBlockResult } => r.ok === true)
+          .map(r => r.output)
+          .sort((a, b) => a.blockIndex - b.blockIndex);
+
+        // Check for failures
+        const failures = results.runs.filter(r => !r.ok);
+        if (failures.length > 0) {
+          logger.error(`[OpenAI] ${failures.length} blocks failed to process`);
+          for (const failure of failures) {
+            if (!failure.ok) {
+              logger.error("Block processing failed", { error: failure.error });
+            }
+          }
+          throw new Error(`${failures.length} of ${blockPayloads.length} blocks failed to process`);
+        }
+
+        logger.info(`[OpenAI] All ${blockResults.length} blocks processed successfully`);
+      }
+    } else {
+      // ElevenLabs: Process blocks sequentially (maintains request stitching)
+      logger.info("[ElevenLabs] Starting sequential block processing with stitching");
+      blockResults = [];
+
+      for (let i = 0; i < textBlocks.length; i++) {
+        const block = textBlocks[i];
+        const blockText = getBlockText(block);
+
+        if (!blockText.trim()) {
+          logger.info(`[ElevenLabs] Skipping empty block ${i + 1}/${textBlocks.length}`);
+          continue;
+        }
+
+        // Get context text for stitching
+        const previousText = i > 0 ? getBlockText(textBlocks[i - 1]) : undefined;
+        const nextText = i < textBlocks.length - 1 ? getBlockText(textBlocks[i + 1]) : undefined;
+
+        logger.info(`[ElevenLabs] Processing block ${i + 1}/${textBlocks.length}`, {
+          blockId: block.uuid,
+          textLength: blockText.length,
+          hasContext: { prev: !!previousText, next: !!nextText },
+        });
+
+        const result = await processBlock.triggerAndWait({
+          bookId,
+          sectionOrder,
+          blockIndex: i,
+          blockId: block.uuid,
+          blockText,
+          voiceId,
+          provider,
+          model,
+          previousText,
+          nextText,
+        });
+
+        if (!result.ok) {
+          logger.error(`[ElevenLabs] Block ${i + 1} failed`, { error: result.error });
+          throw new Error(`Block ${i + 1} failed: ${result.error}`);
+        }
+
+        blockResults.push(result.output);
+        if (result.output.requestId) {
+          requestIds.push(result.output.requestId);
+        }
+
+        logger.info(`[ElevenLabs] Block ${i + 1} completed`, {
+          durationMs: result.output.durationMs,
+          audioSize: result.output.audio.length,
+        });
+      }
+
+      logger.info(`[ElevenLabs] All ${blockResults.length} blocks processed`);
+    }
+
+    // 5. Calculate cumulative timestamps and prepare audio buffers
     const audioBuffers: Buffer[] = [];
     const blockMappings: {
       blockId: string;
@@ -121,71 +242,22 @@ export const processSection = task({
     }[] = [];
 
     let cumulativeTimeMs = 0;
-    const requestIds: string[] = [];
-
-    for (let i = 0; i < textBlocks.length; i++) {
-      const block = textBlocks[i];
-      const blockText = getBlockText(block);
-
-      if (!blockText.trim()) {
-        logger.info(`Skipping empty block ${i + 1}/${textBlocks.length}`);
-        continue;
-      }
-
-      // Get context text for stitching within this section only
-      // Previous text: from previous block in this section
-      const previousText = i > 0 ? getBlockText(textBlocks[i - 1]) : undefined;
-
-      // Next text: from next block in this section
-      const nextText = i < textBlocks.length - 1 ? getBlockText(textBlocks[i + 1]) : undefined;
-
-      logger.info(`Converting block ${i + 1}/${textBlocks.length}`, {
-        blockId: block.uuid,
-        textLength: blockText.length,
-        hasContext: { prev: !!previousText, next: !!nextText },
-      });
-
-      // Convert this block with request stitching
-      // The ElevenLabsService internally tracks previous_request_ids
-      const result = await elevenLabs.convertWithStitching({
-        text: blockText,
-        voiceId,
-        previousText: previousText?.slice(-500), // Use last 500 chars of prev
-        nextText: nextText?.slice(0, 500), // Use first 500 chars of next
-      });
-
-      // Track audio and timing
+    for (const result of blockResults) {
       audioBuffers.push(result.audio);
 
-      // Calculate timing from alignment or estimate from audio duration
-      let blockDurationMs: number;
-      if (result.alignment && result.alignment.characterEndTimesSeconds.length > 0) {
-        // Use alignment data for accurate timing
-        const endTimes = result.alignment.characterEndTimesSeconds;
-        blockDurationMs = Math.max(...endTimes) * 1000;
-      } else {
-        // Estimate: ~150 words per minute, average 5 chars per word
-        // So roughly 750 chars per minute = 12.5 chars per second
-        blockDurationMs = (blockText.length / 12.5) * 1000;
-      }
-
       blockMappings.push({
-        blockId: block.uuid,
+        blockId: result.blockId,
         startTimeMs: cumulativeTimeMs,
-        endTimeMs: cumulativeTimeMs + blockDurationMs,
+        endTimeMs: cumulativeTimeMs + result.durationMs,
       });
 
-      cumulativeTimeMs += blockDurationMs;
-      requestIds.push(result.requestId);
-
-      logger.info(`Block ${i + 1} converted`, {
-        requestId: result.requestId,
-        durationMs: blockDurationMs,
-        audioSize: result.audio.length,
-      });
+      cumulativeTimeMs += result.durationMs;
+      if (result.requestId && !requestIds.includes(result.requestId)) {
+        requestIds.push(result.requestId);
+      }
     }
 
-    // 5. Concatenate all audio buffers
+    // 6. Concatenate all audio buffers
     const combinedAudio = Buffer.concat(audioBuffers);
     logger.info("Combined audio buffers", {
       totalBuffers: audioBuffers.length,
@@ -193,12 +265,12 @@ export const processSection = task({
       totalDurationMs: cumulativeTimeMs,
     });
 
-    // 6. Upload combined audio to R2
+    // 7. Upload combined audio to R2
     const audioPath = `${bookId}/${voiceId}/section-${sectionOrder}.mp3`;
     logger.info("Uploading audio to R2", { path: audioPath, size: combinedAudio.length });
     await uploadFile(audioPath, combinedAudio, 'audio/mpeg');
 
-    // 7. Store block-timestamp mappings
+    // 8. Store block-timestamp mappings
     if (blockMappings.length > 0) {
       await db.insert(blockTimestamps).values(
         blockMappings.map(m => ({
@@ -212,21 +284,19 @@ export const processSection = task({
       );
     }
 
-    // 8. Report audio conversion license usage
-    const conversionReports = textBlocks
-      .filter(block => getBlockText(block).trim())
-      .map((block, index) => ({
-        id: uuidv4(),
-        blockId: block.uuid,
-        licenseType: 'audio-conversion',
-        data: {
-          bookId,
-          sectionOrder,
-          voiceId,
-          requestId: requestIds[index] || 'unknown',
-        },
-        timestamp: new Date(),
-      }));
+    // 9. Report audio conversion license usage
+    const conversionReports = blockResults.map((result, index) => ({
+      id: uuidv4(),
+      blockId: result.blockId,
+      licenseType: 'audio-conversion',
+      data: {
+        bookId,
+        sectionOrder,
+        voiceId,
+        requestId: requestIds[index] || 'unknown',
+      },
+      timestamp: new Date(),
+    }));
 
     if (conversionReports.length > 0) {
       await db.insert(reporting).values(conversionReports).onConflictDoNothing();
@@ -240,6 +310,7 @@ export const processSection = task({
       audioPath,
       processingTimeMs: totalDuration,
       processingTimeSeconds: (totalDuration / 1000).toFixed(2),
+      executionMode: provider === 'openai' ? 'PARALLEL' : 'SEQUENTIAL',
     });
 
     return {

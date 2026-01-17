@@ -1,8 +1,13 @@
 'use client';
-import { createClient } from "@/utils/supabase/client";
-import { Box, Button, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Typography } from "@mui/material";
+import { Box, Button, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { format, set } from 'date-fns';
+import { format, isValid } from 'date-fns';
+
+const formatDate = (dateValue: string | Date | null | undefined): string => {
+  if (!dateValue) return '-';
+  const date = new Date(dateValue);
+  return isValid(date) ? format(date, 'yyyy-MM-dd HH:mm:ss') : '-';
+};
 
 export default function JobsTable() {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -119,10 +124,10 @@ export default function JobsTable() {
             <TableBody>
               {jobs.map((job, idx) => (
                 <TableRow hover key={idx}>
-                  <TableCell>{format(new Date(job.created_at), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
+                  <TableCell>{formatDate(job.created_at || job.createdAt)}</TableCell>
                   <TableCell>{job.id}</TableCell>
                   <TableCell>{job.status}</TableCell>
-                  <TableCell>{job.job_type}</TableCell>
+                  <TableCell>{job.job_type || job.jobType}</TableCell>
                   <TableCell sx={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{JSON.stringify(job.data)}</TableCell>
                   <TableCell>{JSON.stringify(job.log)}</TableCell>
                 </TableRow>
@@ -138,7 +143,19 @@ export default function JobsTable() {
           </Table>
         </TableContainer>
       </Paper>
-      <Box sx={{ display: 'flex', width: '100%', flexDirection: 'row', justifyContent: 'end', position: 'sticky', bottom: 0, bgcolor: 'black' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          flexDirection: 'row',
+          justifyContent: 'end',
+          position: 'sticky',
+          bottom: 0,
+          bgcolor: 'white',
+          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+          px: 2,
+        }}
+      >
         <TablePagination
           component="div"
           count={totalJobs}
@@ -147,6 +164,17 @@ export default function JobsTable() {
           rowsPerPageOptions={[100, 250, 500]}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            '& .MuiTablePagination-selectIcon': {
+              color: '#9966FF',
+            },
+            '& .MuiIconButton-root': {
+              color: '#9966FF',
+              '&.Mui-disabled': {
+                color: 'rgba(153, 102, 255, 0.3)',
+              },
+            },
+          }}
         />
       </Box>
     </>

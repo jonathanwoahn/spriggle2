@@ -27,8 +27,13 @@ export function formatDuration2(seconds: number, showSeconds: boolean = true): s
 }
 
 export const getServerURL = () => {
-  const defaultUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-  return defaultUrl;
+  // Use NEXTAUTH_URL if available, then VERCEL_URL, then fallback to localhost
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Default to port 3010 for local development
+  return "http://localhost:3010";
 }

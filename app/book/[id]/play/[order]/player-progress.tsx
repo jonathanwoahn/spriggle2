@@ -3,36 +3,20 @@ import { formatDuration } from "@/lib/utils";
 import { Box, Slider, Typography } from "@mui/material";
 import { useEffect } from 'react';
 
-export function formatDuration2(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  const parts: string[] = [];
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
-
-  return parts.join(' ');
-}
-
-
 export default function PlayerProgress({
   position,
   setPosition,
   duration,
-  totalLength,
-  chapterTitle,
   onSeekEnd,
   onSeekStart,
+  primaryColor = '#9966FF',
 }: {
   position: number,
   setPosition: (position: number) => void,
   duration: number,
-  totalLength: number,
-  chapterTitle: string,
   onSeekEnd: () => void,
   onSeekStart: () => void,
+  primaryColor?: string,
 }) {
 
   useEffect(() => {
@@ -46,13 +30,14 @@ export default function PlayerProgress({
     return () => {
       document.removeEventListener('mouseup', handleMouseUp);
     };
-    
-  },[onSeekEnd])
-  
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: 2, pb: 2, }}>
-      <Typography variant="caption" component="p">{chapterTitle}</Typography>
 
+  }, [onSeekEnd])
+
+  // Create a lighter version of the primary color for the gradient
+  const lighterColor = `${primaryColor}99`;
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <Slider
         aria-label="time-indicator"
         size="small"
@@ -65,44 +50,58 @@ export default function PlayerProgress({
         onMouseUp={onSeekEnd}
         onTouchStart={onSeekStart}
         onTouchEnd={onSeekEnd}
-        sx={(t) => ({
-          color: 'rgba(0,0,0,0.87)',
+        sx={{
+          color: primaryColor,
           height: 4,
+          '& .MuiSlider-track': {
+            background: `linear-gradient(90deg, ${primaryColor} 0%, ${lighterColor} 100%)`,
+            border: 'none',
+          },
           '& .MuiSlider-thumb': {
-            width: 8,
-            height: 8,
-            transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
+            width: 16,
+            height: 16,
+            backgroundColor: '#fff',
+            border: `2px solid ${primaryColor}`,
+            transition: '0.2s cubic-bezier(.47,1.64,.41,.8)',
             '&::before': {
-              boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
+              boxShadow: `0 2px 12px 0 ${primaryColor}60`,
             },
             '&:hover, &.Mui-focusVisible': {
-              boxShadow: `0px 0px 0px 8px ${'rgb(0 0 0 / 16%)'}`,
-              ...t.applyStyles('dark', {
-                boxShadow: `0px 0px 0px 8px ${'rgb(255 255 255 / 16%)'}`,
-              }),
+              boxShadow: `0px 0px 0px 8px ${primaryColor}25`,
             },
             '&.Mui-active': {
-              width: 25,
-              height: 25,
+              width: 20,
+              height: 20,
             },
           },
           '& .MuiSlider-rail': {
-            opacity: 0.28,
+            opacity: 0.2,
+            backgroundColor: primaryColor,
           },
-          ...t.applyStyles('dark', {
-            color: '#fff',
-          }),
-        })}
+        }}
       />
-      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', }}>
-        {/* how far listened in current chapter */}
-        <Typography variant="caption" component="p">{formatDuration(position)}</Typography>
-        {/* total amount of time remaining in the audiobook */}
-        {/* <Typography variant="caption" component="p">{formatDuration2(totalLength - position)} left</Typography> */}
-        {/* total amount of time left in this chapter */}
-        <Typography variant="caption" component="p">-{formatDuration(duration - position)}</Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          width: '100%',
+          mt: -0.5,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
+        >
+          {formatDuration(position)}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
+        >
+          -{formatDuration(duration - position)}
+        </Typography>
       </Box>
     </Box>
-
   );
 }

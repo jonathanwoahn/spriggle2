@@ -57,20 +57,42 @@ export interface IBlockJob {
 
 export interface IBlockMetadata {
   id?: number;
-  book_id: string;
-  block_id: string;
-  section_order: number;
-  block_index: number;
-  type: BlockType;
+  bookId: string;
+  blockId: string;
+  sectionOrder: number | null;
+  blockIndex: number | null;
+  type: string | null;
   data: {
     duration?: number;
     start_time?: number;
     summary?: string;
     ready?: boolean;
-  } | IOmnibookData;
-  embedding?: number[];
-  created_at?: string;
-  updated_at?: string;
+  } | IOmnibookData | unknown;
+  embedding?: string | null;
+  coverColors?: unknown;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
+}
+
+// Omnipub represents a book/title stored in the omnipubs table
+export interface IOmnipub {
+  id: number;
+  uuid: string;
+  externalId?: string | null;
+  title: string;
+  subtitle?: string | null;
+  creators?: string[] | null;
+  publisher?: string | null;
+  creationDate?: Date | null;
+  coverImage?: string | null;
+  coverColors?: unknown;
+  summary?: string | null;
+  embedding?: number[] | null;
+  totalDuration?: number | null;
+  ready: boolean;
+  cashmereStoredAt?: Date | null;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
 }
 
 export interface IResponse<T = any> {
