@@ -1,8 +1,9 @@
-import { Box, TablePagination, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import BooksTable from "./books-table";
+import AdminPageHeader from "@/components/admin-page-header";
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 export default function BooksPage() {
-
   return (
     <Box
       sx={{
@@ -10,10 +11,15 @@ export default function BooksPage() {
         flex: 1,
         width: '100%',
         flexDirection: 'column',
-        justifyContent: 'start',
-      }}>
+      }}
+    >
+      <AdminPageHeader
+        title="Books"
+        subtitle="Manage your audiobook catalog"
+        icon={<LibraryBooksIcon />}
+        breadcrumbs={[{ label: 'Books' }]}
+      />
       <BooksTable />
     </Box>
   );
-
 }

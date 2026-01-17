@@ -1,54 +1,118 @@
-# TODO (prioritized)
+# Spriggle
 
-## MVP
-- [ ] Enable Media Session API to provide feedback to users on the media session (cover iamge, book title, chapter)
-- [ ] Build worker that runs in the background of user's browser, processing and advancing jobs automatically for the admin while they have the application open / worker enabled
-- [ ] implement service worker to handle processing of books. Add jobs to job queue, allow service worker to look for jobs it can process. make jobs as atomic as possible. create job plan that the worker can check against and make sure that all data is ready before each step.
+An AI-powered audiobook platform for children's books, designed as a white-label solution for publishers.
 
-## Nice to Haves
-- [ ] add ability for admin to give other users admin user role
-- [ ] add ability for admin to create new tags
-- [ ] add ability for admin to tag omnibooks
-- [ ] add ability for admin to display "collections" of omnibooks based on their tags
-- [ ] add ability to view transcription status for an omnibook
-- [ ] add ability for admin to view site activity (which audio blocks have been consumed, which customer, etc. so we can ensure matches with cashmere reporting)
-- [ ] add ability to display tagged collections on the homepage
-- [ ] update all forms to submit when you hit "enter"
-- [ ] update "reset password" page to use MUI components
-- [ ] add social sign in (i.e. Google Auth)
-- [ ] modify hero section to change once a user is logged in
-- [ ] clean up all unused code
+## Tech Stack
 
-# COMPLETED
-- [X] add ability for admin to modify the settings (set OpenAI API Key, Cashmere API Key)
-- [X] modify server to use Cashmere API key from the database on API calls
-- [X] build entire omnibook --> audio conversion flow. Select omnibook(s) in table-->generate audio
-- [X] make admin menu icon only show up for admin users
-- [X] protect the admin routes to ensure only admins can access them (implemented lazy solution, set it to only accept single first user as admin for now)
-- [X] add ability for admin to trigger audio transcription jobs
-- [X] connect FE interface to play generated audio files
+- **Framework**: Next.js 15+ with React 19
+- **Database**: Neon PostgreSQL with Drizzle ORM
+- **Storage**: Cloudflare R2 (S3-compatible)
+- **Auth**: NextAuth.js v5 with credentials provider
+- **External APIs**: Cashmere API (book content), OpenAI (text-to-speech)
 
+## Quick Start
 
+1. Clone and install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-# Developer Journal...
-Jan 4, 2025
-I'm thinking through how to handle the audiobook conversion process. I think I want to handle this similarly to how I did it before, where every block generates its own audio file (eventually paving the way to have multiple voices). Then, the backend is able to stich the audio files together based on its knowledge of the omnibook section, as the filenames will be the same as the bookblock uuid.
+2. Set up external services:
+   - Create a [Neon](https://neon.tech) account and project
+   - Create a [Cloudflare R2](https://dash.cloudflare.com) bucket
 
-This feels like it should provide an entry way to make it easier to report which blocks are being used. Ideally I think I'd like to stitch the blocks together in realtime, and deliver it back to the audio stream—but I don't know if that's possible. The reason I like this is it provides realtime consumption data back to Cashmere, and doesn't "overcompensate" for data usage for the client. Ideally they should only be tracked for what they actually use. The main problem that pops out in my mind is it seems like scanning will be difficult to handle with this method. I just don't know enough yet...
+3. Configure environment variables:
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your credentials
+   ```
 
-I think what we'll need to do is create a parent job to translate the omnibook, and then create a ton of child jobs for each of the book blocks. Each book block becomes its own job. I think we'll need to create a CRON job with vercel that pings supabase for open jobs, and then submits those jobs to openai. if successful, it should update the job in supabase
+4. Initialize the database:
+   ```bash
+   pnpm drizzle-kit push
+   ```
 
-Jan 5, 2025
-i've been thinking more about this. I think what I'm going to do is implement a routine that handles both reporting and licensing in the same call. The application reports back the API which blocks it has used, and then in the same call, the API response with information about whether the application has permission to do what it says it can do. the big thing here is, the application can bundle a bunch of book block requests together, and it can operate optimistically, meaning it doens't have to wait for a response from the server before it can move forward. but if the response it gets from the server is negative, then the application needs to handle it and cancel the operation.
+5. Start the development server:
+   ```bash
+   pnpm dev
+   ```
 
-Also, as far as the tts process goes, i'm going to set up a "poor man's" MQ system using cron jobs and a supabase jobs table.
+6. Register the first user account - they will automatically become admin.
 
-I think i'm also going to set up a "Setup" page / route that will load by default when a user clones the project. In this setup page, it will prompt the user for their Supabase Key and URL, as well as provide instructions on where to find them / how to set it up. they will also enter in their email, and then hit "deploy". The information will be stored in supabase, their user created as the admin in the application, and the environment variables set in vercel. vercel will be prompted to redeploy, and the user will be prompted to reload their application. this will be handled with a .env variable about SETUP_COMPLETE, and a middleware will check this variable. if it has not been completd, then nowhere else in the site will be accessible. if it has been completed, then the setup page will not be accessible (it will 404).
+## Environment Variables
 
+See `.env.example` for required variables:
 
-# NOTES FOR AUDIENCE
-- This default project uses the lowest quality voice generation of OpenAI TTS. If you'd like to generate higher quality audio, the main limitation you're going to run into is Vercel API functions. They have limited memory and runtime, and so the larger audio files that you work with, the higher probability that Vercel will fail when you try to conver the audio or stitch audio files together. So you'd like want to set up an external endpoint to handle the processing that has more CPU power and memory.
-- This project uses browser service workers to handle processing a lot of the audio conversion, due to the limited RAM and run time associated with vercel endpoints. The free plan typically only allows for jobs that are <60s and and consume minimal RAM. By using your browser to offload the processing of this data, it allows you to use the free tier of Vercel as long as you'd like. Just know it's a bit slower and requires you to keep your browser open.
-- Need to manually change setting in supabase to change the max results
-- need to change URL configuration for registration in the supabase settings
-- should sign up for resend to manage emails, otherwise supabase limits it to 4 per hour
+- `DATABASE_URL` - Neon PostgreSQL connection string
+- `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
+- `CLOUDFLARE_R2_ACCESS_KEY_ID` - R2 access key
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY` - R2 secret key
+- `CLOUDFLARE_R2_BUCKET_NAME` - R2 bucket name
+- `NEXTAUTH_SECRET` - Auth encryption key (generate with `openssl rand -base64 32`)
+- `NEXTAUTH_URL` - Your app URL
+
+## Commands
+
+```bash
+pnpm dev          # Start development server (port 3010)
+pnpm build        # Production build
+pnpm start        # Start production server
+pnpm drizzle-kit push      # Push schema changes to database
+pnpm drizzle-kit generate  # Generate migrations
+```
+
+## Architecture
+
+### Key Directories
+
+- `app/` - Next.js App Router pages and API routes
+- `components/` - React components
+- `lib/` - Core business logic (Cashmere client, storage, auth helpers)
+- `db/` - Database schema and client
+
+### Job Processing
+
+The app uses an async job queue for audiobook generation:
+
+1. `CREATE_JOBS` - Spawns all sub-jobs
+2. `TEXT_TO_AUDIO_META` - Convert text to audio
+3. `SECTION_CONCAT_META` - Concatenate chapter audio
+4. `BOOK_SUMMARY` - Generate summary
+5. `SUMMARY_EMBEDDING` - Create vector embedding
+6. `BOOK_META` - Mark book ready
+
+### Admin Dashboard
+
+Access `/admin` to:
+- Configure API keys (Cashmere, OpenAI)
+- Manage book collections
+- Trigger audiobook generation jobs
+- Monitor job status
+
+## For Publishers (White-Label)
+
+To deploy your own instance:
+
+1. Fork this repository
+2. Create Neon and Cloudflare R2 accounts
+3. Set environment variables
+4. Deploy to Vercel (or similar)
+5. First registered user becomes admin
+
+## Notes
+
+- Uses browser service workers for job processing to work within Vercel's free tier limits
+- Higher quality audio generation may require external processing endpoints due to memory/timeout constraints
+- The Cashmere API handles book content licensing and reporting
+
+## TODO
+
+### MVP
+- [ ] Enable Media Session API for cover image, book title, chapter display
+- [ ] Build background worker for automatic job processing
+
+### Nice to Haves
+- [ ] Admin role management
+- [ ] Tagging system for books
+- [ ] Site activity monitoring
+- [ ] Social sign-in (Google Auth)

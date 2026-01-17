@@ -1,61 +1,95 @@
 import { IResponse } from "@/lib/types";
-import { createClient } from "@/utils/supabase/server";
+import { db, jobs } from "@/db";
+import { eq, asc, desc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 // retrieves jobs with search parameters
 export const GET = async (req: NextRequest) => {
-  const supabase = await createClient();
-  const searchParams = req.nextUrl.searchParams;
+  try {
+    const searchParams = req.nextUrl.searchParams;
 
-  const orderBy = searchParams.get('orderBy') || 'id';
-  const order = searchParams.get('order') || 'asc';
-  const page = parseInt(searchParams.get('page') || '0');
-  const rowsPerPage = parseInt(searchParams.get('rowsPerPage') || '100');
-  const selectedTab = searchParams.get('selectedTab') || 'failed';
+    const orderBy = searchParams.get('orderBy') || 'id';
+    const order = searchParams.get('order') || 'asc';
+    const page = parseInt(searchParams.get('page') || '0');
+    const rowsPerPage = parseInt(searchParams.get('rowsPerPage') || '100');
+    const selectedTab = searchParams.get('selectedTab') || 'failed';
 
-  let query = supabase
-    .from('jobs')
-    .select('*', { count: 'exact' })
-    .order(orderBy, { ascending: order === 'asc' })
-    .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1)
-    .eq('status', selectedTab);
+    // Map orderBy string to column
+    const orderColumn = orderBy === 'id' ? jobs.id :
+                        orderBy === 'status' ? jobs.status :
+                        orderBy === 'jobType' ? jobs.jobType :
+                        orderBy === 'createdAt' ? jobs.createdAt :
+                        jobs.id;
 
-  const { data, error, count } = await query;
+    const data = await db
+      .select()
+      .from(jobs)
+      .where(eq(jobs.status, selectedTab))
+      .orderBy(order === 'asc' ? asc(orderColumn) : desc(orderColumn))
+      .limit(rowsPerPage)
+      .offset(page * rowsPerPage);
 
-  if (error) {
+    // Get count
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(jobs)
+      .where(eq(jobs.status, selectedTab));
+
+    const count = Number(countResult[0]?.count || 0);
+
+    return NextResponse.json({ data, count });
+  } catch (error: any) {
     console.error('Error fetching jobs:', error);
-    return NextResponse.json({error: error.message}, {status: 500});
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({data, count});
 }
-
 
 // Add new array of jobs
 export const POST = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
-  const body = await req.json();
-  const supabase = await createClient();
+  try {
+    const body = await req.json();
 
-  const { data, error } = await supabase.from('jobs').insert(body);
+    // Handle both single object and array
+    const items = Array.isArray(body) ? body : [body];
 
-  if(error) {
-    return NextResponse.json({message: error.message}, {status: 500});
+    const data = await db.insert(jobs).values(items).returning();
+
+    return NextResponse.json({ data });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({data});;
 };
 
 // update the data for a job
 export const PUT = async (req: NextRequest): Promise<NextResponse<IResponse>> => {
-  const body = await req.json();
-  const supabase = await createClient();
+  try {
+    const body = await req.json();
 
-  const { data, error } = await supabase.from('jobs').upsert(body);
+    // Handle both single object and array
+    const items = Array.isArray(body) ? body : [body];
 
-  if(error) {
-    return NextResponse.json({message: error.message}, {status: 500});
+    const results = [];
+    for (const item of items) {
+      const result = await db
+        .insert(jobs)
+        .values(item)
+        .onConflictDoUpdate({
+          target: jobs.id,
+          set: {
+            jobType: item.jobType ?? item.job_type,
+            status: item.status,
+            data: item.data,
+            log: item.log,
+            dependencies: item.dependencies,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      results.push(...result);
+    }
+
+    return NextResponse.json({ data: results });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({data});;
 };
-

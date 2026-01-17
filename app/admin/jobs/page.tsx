@@ -1,8 +1,9 @@
-import { Box, TablePagination, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import JobsTable from "./jobs-table";
+import AdminPageHeader from "@/components/admin-page-header";
+import WorkIcon from '@mui/icons-material/Work';
 
 export default function AdminJobsPage() {
-
   return (
     <Box
       sx={{
@@ -10,10 +11,15 @@ export default function AdminJobsPage() {
         flex: 1,
         width: '100%',
         flexDirection: 'column',
-        justifyContent: 'start',
-      }}>
+      }}
+    >
+      <AdminPageHeader
+        title="Jobs"
+        subtitle="Monitor audio processing jobs"
+        icon={<WorkIcon />}
+        breadcrumbs={[{ label: 'Jobs' }]}
+      />
       <JobsTable />
-    </Box>    
+    </Box>
   );
-
 }

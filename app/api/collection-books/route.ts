@@ -1,32 +1,29 @@
-import { createClient } from "@/utils/supabase/server";
+import { db, collectionBooks } from "@/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export const POST = async (req: NextRequest) => {
+  try {
+    const { bookIds, collectionIds } = await req.json();
 
-  const {bookIds, collectionIds} = await req.json();
-  
-  const entries = bookIds.reduce((acc: string[], bookId: string) => {
-    const t = collectionIds.map((collectionId: string) => {
-      return {
-        book_id: bookId,
-        collection_id: collectionId,
-      }
-    });
+    const entries = bookIds.reduce((acc: any[], bookId: string) => {
+      const t = collectionIds.map((collectionId: string) => {
+        return {
+          bookId: bookId,
+          collectionId: parseInt(collectionId),
+        }
+      });
 
-    acc.push(...t);
-    return acc;
-    
-  }, []);
-  
-  console.log(entries);
+      acc.push(...t);
+      return acc;
 
-  const sb = await createClient();
+    }, []);
 
-  const { data, error } = await sb.from('collection_books').insert(entries);
-  
-  if(error) {
+    console.log(entries);
+
+    const data = await db.insert(collectionBooks).values(entries).returning();
+
+    return NextResponse.json({ data });
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  
-  return NextResponse.json({ data });
 }

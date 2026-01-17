@@ -104,7 +104,19 @@ export default function CollectionsTable() {
           </Table>
         </TableContainer>
       </Paper>
-      <Box sx={{ display: 'flex', width: '100%', flexDirection: 'row', justifyContent: 'end', position: 'sticky', bottom: 0, bgcolor: 'black' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          flexDirection: 'row',
+          justifyContent: 'end',
+          position: 'sticky',
+          bottom: 0,
+          bgcolor: 'white',
+          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+          px: 2,
+        }}
+      >
         <TablePagination
           component="div"
           count={totalCollections}
@@ -113,6 +125,17 @@ export default function CollectionsTable() {
           rowsPerPageOptions={[100, 250, 500]}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            '& .MuiTablePagination-selectIcon': {
+              color: '#9966FF',
+            },
+            '& .MuiIconButton-root': {
+              color: '#9966FF',
+              '&.Mui-disabled': {
+                color: 'rgba(153, 102, 255, 0.3)',
+              },
+            },
+          }}
         />
       </Box>
       <CollectionDialogForm isOpen={isOpen} setIsOpen={setIsOpen} form={formData} />

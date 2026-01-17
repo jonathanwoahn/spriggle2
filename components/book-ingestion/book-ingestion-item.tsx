@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import BookIngestionStatusBar from "./book-ingestion-status-bar";
 
 export default function BookIngestionItem({

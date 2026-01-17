@@ -12,7 +12,7 @@ export class PlaybackReporter {
   constructor(private readonly _metadataBlocks: IBlockMetadata[] = []) {
     if(typeof window !== 'undefined') {
       // initialize the worker
-      this._worker = new Worker(new URL('/public/playback-reporter.worker.js', import.meta.url));
+      this._worker = new Worker('/playback-reporter.worker.js');
       this._worker.addEventListener('message', this._handleWorkerMessage.bind(this));
       this._worker.postMessage({ task: 'start' });
       
@@ -103,27 +103,34 @@ export class PlaybackReporter {
   }
 
   async reportPlayback(position: number): Promise<void> {
-    const findBlock = (position: number): any => {
+    const findBlock = (position: number): IBlockMetadata | undefined => {
       return this._metadataBlocks.find((block) => {
-        return 'start_time' in block.data && 'duration' in block.data &&
-               (block.data.start_time! / 1000) <= position && position < ((block.data.start_time! + block.data.duration!) / 1000);
+        const data = block.data as Record<string, unknown>;
+        const startTime = typeof data.start_time === 'number' ? data.start_time : undefined;
+        const duration = typeof data.duration === 'number' ? data.duration : undefined;
+        if (startTime === undefined || duration === undefined) return false;
+        return (startTime / 1000) <= position && position < ((startTime + duration) / 1000);
       });
     }
 
     const block = findBlock(position);
     if(!block) {
-      console.error('No block found for position', position);
+      // Silently return for early positions (startup) or if metadata not loaded
+      // Only log if position is significant and we expected to find a block
+      if (position > 1 && this._metadataBlocks.length > 0) {
+        console.warn('No block found for position', position);
+      }
       return;
     }
 
     const report: ILicenseReport = {
       id: uuid(),
-      blockId: block.block_id,
+      blockId: block.blockId,
       licenseType: LicenseType.AUDIO_PLAYBACK,
       timestamp: Date.now(),
     };
-    
-    const exists = await this._reportExists(block.block_id);
+
+    const exists = await this._reportExists(block.blockId);
 
     if(exists) {
       return;

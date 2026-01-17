@@ -1,5 +1,4 @@
-import { AUDIO_BUCKET } from "@/app/api/jobs/execute/helpers";
-import { createClient } from "@/utils/supabase/server";
+import { fileExists } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 
 // Utility endpoint that checks to see if a file already exists on the server. It helps to prevent excessive server load
@@ -9,20 +8,15 @@ export const GET = async (
 ) => {
   const { bookId, filename } = await params;
 
-  // check if the file exists in the storage bucket
-  const sb = await createClient();
-  const { data, error } = await sb
-    .storage
-    .from(AUDIO_BUCKET)
-    .list(bookId, { search: filename });
+  try {
+    const exists = await fileExists(`${bookId}/${filename}`);
 
-  if (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    if (!exists) {
+      return NextResponse.json({ exists: false, error: 'File not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ exists: true }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  if (data.length === 0) {
-    return NextResponse.json({ exists: false, error: 'File not found' }, { status: 404 });
-  }
-
-  return NextResponse.json({ exists: true }, {status: 200});
 }

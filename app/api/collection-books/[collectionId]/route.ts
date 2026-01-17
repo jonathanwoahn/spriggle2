@@ -1,16 +1,18 @@
-import { createClient } from "@/utils/supabase/server";
+import { db, collectionBooks } from "@/db";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest, { params }: { params: Promise<{ collectionId: string }> }) => {
   const { collectionId } = await params;
 
-  const sb = await createClient();
+  try {
+    const data = await db
+      .select()
+      .from(collectionBooks)
+      .where(eq(collectionBooks.collectionId, parseInt(collectionId)));
 
-  const { data, error } = await sb.from('collection_books').select('*').eq('collection_id', collectionId);
-
-  if (error) {
+    return NextResponse.json({ data });
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({ data });
 }

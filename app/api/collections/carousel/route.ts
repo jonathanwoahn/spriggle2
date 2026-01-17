@@ -1,5 +1,7 @@
-import { BlockType, IBlockMetadata, IResponse } from "@/lib/types";
-import { createClient } from "@/utils/supabase/server";
+import { IOmnipub, IResponse } from "@/lib/types";
+import { db } from "@/db";
+import { collections, collectionBooks, omnipubs } from "@/db/schema";
+import { eq, and, inArray, asc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 interface ICarousel {
@@ -8,85 +10,113 @@ interface ICarousel {
     name: string;
     description: string;
   };
-  metadata: IBlockMetadata[];
+  books: IOmnipub[];
 }
 
 export const GET = async (req: NextRequest): Promise<NextResponse<IResponse<ICarousel>>> => {
-
   const searchParams = new URLSearchParams(req.nextUrl.search);
   const bookId = searchParams.get('bookId');
   const collectionId = searchParams.get('collectionId');
 
-  const sb = await createClient();
+  try {
+    if (collectionId) {
+      // Get collection
+      const collectionData = await db
+        .select()
+        .from(collections)
+        .where(eq(collections.id, parseInt(collectionId)))
+        .limit(1);
 
+      if (collectionData.length === 0) {
+        return NextResponse.json({ status: 404, message: 'Collection not found' });
+      }
 
-  if(collectionId) {
-    const {data: collectionData, error} = await sb
-      .from('collections')
-      .select(`
-        id,
-        name,
-        description,
-        collection_books (
-          book_id
+      const collection = collectionData[0];
+
+      // Get collection book IDs
+      const collectionBooksData = await db
+        .select()
+        .from(collectionBooks)
+        .where(eq(collectionBooks.collectionId, parseInt(collectionId)));
+
+      const bookIds = collectionBooksData.map(b => b.bookId);
+
+      if (bookIds.length === 0) {
+        return NextResponse.json({
+          data: {
+            collection: {
+              id: collection.id,
+              name: collection.name,
+              description: collection.description || '',
+            },
+            books: [],
+          }
+        });
+      }
+
+      // Get ready books from omnipubs that are in this collection
+      const books = await db
+        .select()
+        .from(omnipubs)
+        .where(
+          and(
+            inArray(omnipubs.uuid, bookIds),
+            eq(omnipubs.ready, true)
+          )
         )
-      `).eq('id', collectionId).single();
-    
-    if (error) {
-      return NextResponse.json({status: 500, message: error.message});
-    }
-    
-    const { collection_books: collectionBooks, ...collection } = collectionData;
+        .orderBy(asc(omnipubs.title));
 
-    const { data: metadata, error: metadataError } = await sb
-      .from('block_metadata')
-      .select('*')
-      .in('book_id', collectionBooks.map(({book_id}) => book_id))
-      .eq('type', BlockType.BOOK)
-      .eq('data->>ready', 'true');
-
-    if(metadataError) {
-      return NextResponse.json({status: 500, message: metadataError.message});
+      return NextResponse.json({
+        data: {
+          collection: {
+            id: collection.id,
+            name: collection.name,
+            description: collection.description || '',
+          },
+          books: books as IOmnipub[],
+        }
+      });
     }
-    
-    return NextResponse.json({ data: {collection, metadata} });
+
+    if (bookId) {
+      // Get other ready books (excluding the current one)
+      const otherBooks = await db
+        .select()
+        .from(omnipubs)
+        .where(
+          and(
+            eq(omnipubs.ready, true),
+            sql`${omnipubs.uuid} != ${bookId}`
+          )
+        )
+        .orderBy(asc(omnipubs.title))
+        .limit(10);
+
+      const collection = {
+        name: 'You Might Also Enjoy',
+        description: 'More books to explore',
+      };
+
+      return NextResponse.json({ data: { books: otherBooks as IOmnipub[], collection } });
+    }
+
+    // No specific collection or book requested - return all ready books
+    const allBooks = await db
+      .select()
+      .from(omnipubs)
+      .where(eq(omnipubs.ready, true))
+      .orderBy(asc(omnipubs.title));
+
+    return NextResponse.json({
+      data: {
+        collection: {
+          name: 'All Books',
+          description: 'Browse our complete library',
+        },
+        books: allBooks as IOmnipub[],
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ status: 500, message: error.message });
   }
-  
-  if(bookId) {
-    const { data: bookMetadata, error: bookError} = await sb.from('block_metadata').select('*').eq('block_id', bookId).eq('data->>ready', 'true').single();
-    
-    if(!bookMetadata) {
-      return NextResponse.json({status: 404, message: 'Book metadata not found'});
-    }
-
-    if(!bookMetadata.embedding) {
-      return NextResponse.json({status: 404, message: 'Book metadata not found'});
-    }
-
-    if (bookError) {
-      return NextResponse.json({status: 500, message: bookError.message});
-    }
-    
-    const query = {
-      query_embedding: bookMetadata.embedding,
-      match_count: 10,
-      match_threshold: 0.7,
-    };
-
-    const { data: matchData, error: matchError } = await sb.rpc('match_documents', query);
-
-    if (matchError) {
-      return NextResponse.json({status: 500, message: matchError.message});
-    }
-
-    const metadata = matchData.filter((match: IBlockMetadata) => match.book_id !== bookId);
-    const collection = {
-      name: `Other books similar to ${bookMetadata.data.title}`,
-      description: 'AI similarity match',
-    };
-    
-    return NextResponse.json({ data: { metadata, collection } });
-  }
-
-  return NextResponse.json({status: 404, message: 'Not found'});
 }

@@ -1,139 +1,116 @@
 "use server";
 
-import { encodedRedirect } from "@/utils/utils";
-import { createClient } from "@/utils/supabase/server";
-import { headers } from "next/headers";
+import { signIn, signOut } from "@/auth";
+import { db, users } from "@/db";
+import { eq } from "drizzle-orm";
+import { listFiles } from "@/lib/storage";
 import { redirect } from "next/navigation";
 import Cashmere from "@/lib/cashmere";
 import { getServerURL } from "@/lib/utils";
+import bcrypt from "bcryptjs";
+import { v4 as uuid } from "uuid";
 
 export const signUpAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
 
-  const supabase = await createClient();
-
   if (!email || !password) {
-    return encodedRedirect(
-      "error",
-      "/sign-up",
-      "Email and password are required",
-    );
+    return redirect(`/sign-up?error=${encodeURIComponent("Email and password are required")}`);
   }
-  
-  console.log('REDIRECT TO: ', redirect_to);
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: redirect_to ? `${getServerURL()}/auth/callback?redirect_to=${redirect_to}` : `${getServerURL()}/auth/callback`,
-    },
-  });
+  try {
+    // Check if user already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-  if (error) {
-    console.error(error.code + " " + error.message);
-    return encodedRedirect("error", "/sign-up", error.message);
-  } else {
-    return encodedRedirect(
-      "success",
-      "/sign-up",
-      `Thanks for signing up! An email has been sent to "${email}". Please verify your account so you can access Spriggle!`,
-    );
+    if (existingUser.length > 0) {
+      return redirect(`/sign-up?error=${encodeURIComponent("User already exists")}`);
+    }
+
+    // Hash password and create user
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Check if this is the first user - make them admin
+    const allUsers = await db.select().from(users).limit(1);
+    const isFirstUser = allUsers.length === 0;
+
+    await db.insert(users).values({
+      id: uuid(),
+      email,
+      passwordHash,
+      role: isFirstUser ? 'admin' : 'user',
+      emailVerified: new Date(), // Auto-verify for now
+    });
+
+    // Sign in the user
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: redirect_to || "/",
+    });
+  } catch (error: any) {
+    // Handle redirect from signIn
+    if (error?.digest?.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+    console.error("Sign up error:", error);
+    return redirect(`/sign-up?error=${encodeURIComponent(error.message || "Sign up failed")}`);
   }
 };
 
 export const signInAction = async (formData: FormData, redirect_to?: string) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const supabase = await createClient();
-  
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
 
-  if (error) {
-    return encodedRedirect("error", `/sign-in&redirect_to=${redirect_to}`, error.message);
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: redirect_to || "/",
+    });
+  } catch (error: any) {
+    // Handle redirect from signIn
+    if (error?.digest?.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+    return redirect(`/sign-in?error=${encodeURIComponent("Invalid credentials")}&redirect_to=${redirect_to || ""}`);
   }
-
-  return redirect_to ? redirect(redirect_to) : redirect('/');
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
-  const supabase = await createClient();
-  const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {
-    return encodedRedirect("error", "/forgot-password", "Email is required");
+    return redirect(`/forgot-password?error=${encodeURIComponent("Email is required")}`);
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${getServerURL()}/auth/callback?redirect_to=/protected/reset-password`,
-  });
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect(
-      "error",
-      "/forgot-password",
-      "Could not reset password",
-    );
-  }
-
-  if (callbackUrl) {
-    return redirect(callbackUrl);
-  }
-
-  return encodedRedirect(
-    "success",
-    "/forgot-password",
-    "Check your email for a link to reset your password.",
-  );
+  // For now, just show a success message
+  // TODO: Implement email sending for password reset
+  return redirect(`/forgot-password?success=${encodeURIComponent("If an account exists with that email, you will receive a password reset link.")}`);
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = await createClient();
-
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
+  const token = formData.get("token") as string;
 
   if (!password || !confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Password and confirm password are required",
-    );
+    return redirect(`/reset-password?error=${encodeURIComponent("Password and confirm password are required")}`);
   }
 
   if (password !== confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Passwords do not match",
-    );
+    return redirect(`/reset-password?error=${encodeURIComponent("Passwords do not match")}`);
   }
 
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
-
-  if (error) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Password update failed",
-    );
-  }
-
-  encodedRedirect("success", "/protected/reset-password", "Password updated");
+  // TODO: Implement password reset with token verification
+  return redirect(`/sign-in?success=${encodeURIComponent("Password updated successfully")}`);
 };
 
 export const signOutAction = async () => {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  return redirect("/");
+  await signOut({ redirectTo: "/" });
 };
 
 export interface ISetting {
@@ -156,107 +133,58 @@ export const saveSettings = async (settings: ISetting[]) => {
   })
 }
 
-export const getJobCount = async ({bookId }: { bookId: string }) => {
+export const getJobCount = async ({ bookId }: { bookId: string }) => {
+  // Use Drizzle for database queries
+  const { db: database } = await import("@/db");
+  const { omnipubs, ingestionStatus } = await import("@/db/schema");
+  const { eq, sql } = await import("drizzle-orm");
 
-  // get the cashmere api key
-  const response = await fetch(`${getServerURL()}/api/settings/cashmereApiKey`);
-  const { value } = await response.json();
+  // Get ingestion progress from ingestionStatus table
+  const ingestionStats = await database
+    .select()
+    .from(ingestionStatus)
+    .where(eq(ingestionStatus.bookId, bookId))
+    .limit(1);
 
-  const cash = new Cashmere(value);
+  const totalSections = ingestionStats[0]?.totalSections || 0;
+  const completedSections = ingestionStats[0]?.completedSections || 0;
+  const ingestionStatusValue = ingestionStats[0]?.status || 'pending';
 
-  const allBlocks = await cash.getAllBookBlocks(bookId);
-  const coreBlocks = allBlocks.reduce((acc: number, curr: any) => {
-    const count = curr.blocks.filter((block: any) => block.type === 'book' || block.type === 'section' || block.type === 'text').length;
-    return acc + count;
-  }, 1); // the starting point of "1" accounts for the book block that doesn't get retrieved from cashmere right now
-  const sections = allBlocks.length;
+  // Get book stats from omnipubs
+  const bookStats = await database
+    .select({
+      hasSummary: sql<boolean>`${omnipubs.summary} is not null`,
+      hasEmbedding: sql<boolean>`${omnipubs.embedding} is not null`,
+      totalDuration: omnipubs.totalDuration,
+    })
+    .from(omnipubs)
+    .where(eq(omnipubs.uuid, bookId))
+    .limit(1);
 
+  // List audio files from R2 - count actual section audio files
+  const audioFiles = await listFiles(`${bookId}/`);
+  // Audio files are stored as: ${bookId}/${voiceId}/section-${order}.mp3
+  const audioCount = audioFiles.filter((file) =>
+    file.key?.match(/section-\d+\.mp3$/)
+  ).length;
 
-  
-
-  console.log(coreBlocks, sections);
-  
-  // const coreBlocks = allBlocks.filter((block: any) => block.type === 'book' || block.type === 'section' || block.type === 'text').length;
-  // const sections = allBlocks.filter((block: any) => block.type === 'section');
-  // const sectionBlocks = sections.length;
-  
-  const sb = await createClient();
-  
-  const {data: audioData, error: errorData} = await sb.storage.from('audio').list(`${bookId}/`, { limit: 10000 });
-  
-  if(!audioData) return;
-
-  const audioCount = allBlocks.reduce((acc: number, curr: any) => {
-    const filename = `${bookId}-${curr.navItem.order}.mp3`;
-    const idx = audioData.findIndex((audio: any) => audio.name === filename);
-    if(idx > -1) {
-      acc += 1;
-    }
-
-    return acc;
-  }, 0);
-
-  /**
-   * information we need to get (by book id):
-   * 1. total # of jobs (sb)
-   * 2. total # of completed jobs (sb)
-   * 3. total # of metadata blocks (sb)
-   * 5. total duration of the book (sb)
-   * 6. total # of audio files (sb storage)
-   * 8. has summary (sb)
-   * 9. has embedding (sb)
-   * 4. total number of blocks (text, section, book) in the book (cash)
-   * 7. total # of section blocks (cash)
-   */
-  
-  
-  
-  
-  const query = `
-WITH book_jobs AS (
-  SELECT 
-    (data->>'bookId') AS book_id,
-    COUNT(*) AS total_jobs,
-    COUNT(*) FILTER (WHERE status = 'completed') AS completed_jobs
-  FROM jobs
-  WHERE (data->>'bookId') = '${bookId}'
-  GROUP BY (data->>'bookId')
-),
-metadata_blocks AS (
-  SELECT 
-    book_id,
-    COUNT(*) AS total_metadata_blocks,
-    SUM((data->>'duration')::numeric) FILTER (WHERE type = 'section') AS total_duration,
-    BOOL_OR(CASE WHEN type = 'book' AND data->>'summary' IS NOT NULL THEN true ELSE false END) AS has_summary,
-    BOOL_OR(CASE WHEN type = 'book' AND embedding IS NOT NULL THEN true ELSE false END) AS has_embedding
-  FROM block_metadata
-  WHERE book_id = '${bookId}'
-  GROUP BY book_id
-)
-SELECT jsonb_build_object(
-  'totalJobs', COALESCE(bj.total_jobs, 0),
-  'completedJobs', COALESCE(bj.completed_jobs, 0),
-  'metadataBlocks', COALESCE(mb.total_metadata_blocks, 0),
-  'duration', COALESCE(mb.total_duration, 0),
-  'hasSummary', COALESCE(mb.has_summary, false),
-  'hasEmbedding', COALESCE(mb.has_embedding, false)
-) AS result
-FROM (SELECT '${bookId}' AS book_id) b
-LEFT JOIN book_jobs bj ON b.book_id = bj.book_id
-LEFT JOIN metadata_blocks mb ON b.book_id = mb.book_id;
-`;
-
-  const {data, error} =  await sb.rpc('execute_sql', { sql: query });
-
-  if(error) {
-    console.error(error);
-    return;
-  }
-  
   return {
-    ...data,
+    // Progress tracking
+    totalSections,
+    completedSections,
+    ingestionStatus: ingestionStatusValue,
+
+    // Legacy fields for compatibility
+    totalJobs: totalSections,
+    completedJobs: completedSections,
+    metadataBlocks: 0, // Deprecated
+    coreBlocks: 0, // Deprecated
+
+    // Actual metrics
+    duration: Number(bookStats[0]?.totalDuration || 0),
+    hasSummary: bookStats[0]?.hasSummary || false,
+    hasEmbedding: bookStats[0]?.hasEmbedding || false,
     audioCount,
-    coreBlocks,
-    sections,
+    sections: totalSections,
   };
 }

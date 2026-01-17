@@ -1,32 +1,40 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import BookIngestionItem from "./book-ingestion-item";
 import { getJobCount } from "@/app/actions";
 import { formatDuration2 } from "@/lib/utils";
 import { Divider, Stack } from "@mui/material";
 
 export interface IIngestionMetrics {
+  totalSections: number;
+  completedSections: number;
+  ingestionStatus: string;
+  // Legacy fields
   totalJobs: number;
   completedJobs: number;
   metadataBlocks: number;
+  coreBlocks: number;
+  // Active metrics
   duration: number;
   audioCount: number;
   hasSummary: boolean;
   hasEmbedding: boolean;
-  coreBlocks: number;
   sections: number;
 }
 
 export const DEFAULT_METRICS: IIngestionMetrics = {
+  totalSections: 0,
+  completedSections: 0,
+  ingestionStatus: 'pending',
   totalJobs: 0,
   completedJobs: 0,
   metadataBlocks: 0,
+  coreBlocks: 0,
   duration: 0,
   audioCount: 0,
   hasSummary: false,
   hasEmbedding: false,
-  coreBlocks: 0,
   sections: 0,
 };
 
@@ -49,6 +57,10 @@ export default function BookIngestionJobItem({bookId}: {bookId: string}) {
       init();
     }, []);
 
+    const progressPercent = data.totalSections > 0
+      ? Math.trunc((data.completedSections / data.totalSections) * 100)
+      : 0;
+
     return (
       <Stack
         divider={<Divider orientation="vertical" flexItem />}
@@ -56,24 +68,17 @@ export default function BookIngestionJobItem({bookId}: {bookId: string}) {
         sx={{ width: '100%', justifyContent: 'center' }}
         direction={{sm: "row", xs: "column"}}>
         <BookIngestionItem
-          label="Jobs"
-          content={`${Math.trunc((data.completedJobs / data.totalJobs)* 100) || 0}%`}
-          total={data.completedJobs}
-          max={data.totalJobs}
-          thinking={isThinking}
-        />
-        <BookIngestionItem
-          label="Metadata"
-          content={`${Math.trunc((data.metadataBlocks / data.coreBlocks) * 100)}%`}
-          total={data.metadataBlocks}
-          max={data.coreBlocks}
+          label="Progress"
+          content={`${progressPercent}%`}
+          total={data.completedSections}
+          max={data.totalSections}
           thinking={isThinking}
         />
         <BookIngestionItem
           label="Audio"
-          content={`${data.audioCount} / ${data.sections}`}
+          content={`${data.audioCount} / ${data.totalSections}`}
           total={data.audioCount}
-          max={data.sections}
+          max={data.totalSections}
           thinking={isThinking}
         />
         <BookIngestionItem
