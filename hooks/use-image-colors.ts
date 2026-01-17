@@ -58,7 +58,7 @@ export function useImageColors(imageUrl: string | null): { colors: ImageColors; 
     };
 
     img.onerror = () => {
-      console.error('Error loading image for color extraction');
+      // CORS or network error - silently fall back to defaults
       setColors(defaultColors);
       setLoading(false);
     };
