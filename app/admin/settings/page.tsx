@@ -4,6 +4,8 @@ import { getServerURL } from "@/lib/utils";
 import AdminPageHeader from "@/components/admin-page-header";
 import SettingsIcon from '@mui/icons-material/Settings';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const response = await fetch(`${getServerURL()}/api/settings`);
   if (!response.ok) {

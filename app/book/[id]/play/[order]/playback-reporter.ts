@@ -12,7 +12,7 @@ export class PlaybackReporter {
   constructor(private readonly _metadataBlocks: IBlockMetadata[] = []) {
     if(typeof window !== 'undefined') {
       // initialize the worker
-      this._worker = new Worker(new URL('/public/playback-reporter.worker.js', import.meta.url));
+      this._worker = new Worker('/playback-reporter.worker.js');
       this._worker.addEventListener('message', this._handleWorkerMessage.bind(this));
       this._worker.postMessage({ task: 'start' });
       
