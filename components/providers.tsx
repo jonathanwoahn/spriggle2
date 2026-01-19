@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import theme from '@/app/theme';
 import { MenuProvider } from '@/context/admin-menu-context';
 import { AccentColorProvider } from '@/context/accent-color-context';
+import { AudioProvider } from '@/context/audio-context';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,9 +18,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     return (
       <ThemeProvider theme={theme}>
         <AccentColorProvider>
-          <MenuProvider>
-            {children}
-          </MenuProvider>
+          <AudioProvider>
+            <MenuProvider>
+              {children}
+            </MenuProvider>
+          </AudioProvider>
         </AccentColorProvider>
       </ThemeProvider>
     );
@@ -29,9 +32,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <ThemeProvider theme={theme}>
         <AccentColorProvider>
-          <MenuProvider>
-            {children}
-          </MenuProvider>
+          <AudioProvider>
+            <MenuProvider>
+              {children}
+            </MenuProvider>
+          </AudioProvider>
         </AccentColorProvider>
       </ThemeProvider>
     </SessionProvider>

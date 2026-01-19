@@ -13,6 +13,7 @@ interface ChapterDrawerProps {
   bookData: IBookData;
   primaryColor?: string;
   secondaryColor?: string;
+  onChapterSelect?: (order: number) => void;
 }
 
 export default function ChapterDrawer({
@@ -21,6 +22,7 @@ export default function ChapterDrawer({
   bookData,
   primaryColor = '#9966FF',
   secondaryColor = '#7A52CC',
+  onChapterSelect,
 }: ChapterDrawerProps) {
   const [blockData, setBlockData] = useState<any>([]);
   const theme = useTheme();
@@ -141,11 +143,21 @@ export default function ChapterDrawer({
         ) : (
           availableChapters.map((navItem, idx) => {
             const duration = getChapterDuration(navItem.order);
+            const handleClick = () => {
+              setIsOpen(false);
+              if (onChapterSelect) {
+                onChapterSelect(navItem.order);
+              }
+            };
+            // Use href for navigation only when onChapterSelect is not provided
+            const linkProps = onChapterSelect
+              ? {}
+              : { href: `/book/${bookData.uuid}/play/${navItem.order}` };
             return (
               <ListItemButton
-                href={`/book/${bookData.uuid}/play/${navItem.order}`}
-                onClick={() => setIsOpen(false)}
                 key={navItem.order}
+                {...linkProps}
+                onClick={handleClick}
                 sx={{
                   py: 2,
                   px: 3,

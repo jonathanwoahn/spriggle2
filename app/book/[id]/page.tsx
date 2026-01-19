@@ -16,13 +16,28 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
 
   const admin = await isAdmin();
 
-  // Fetch book metadata and colors in parallel
-  const [blockResponse, colorsResponse] = await Promise.all([
+  // Fetch book metadata, colors, and available sections in parallel
+  const [blockResponse, colorsResponse, sectionsResponse] = await Promise.all([
     fetch(`${getServerURL()}/api/metadata?blockId=${id}&type=book`),
     fetch(`${getServerURL()}/api/book/${id}/extract-colors`),
+    fetch(`${getServerURL()}/api/metadata?bookId=${id}&type=section`),
   ]);
 
   const {data} = (await blockResponse.json());
+
+  // Get first available section with audio
+  let firstSection = 0;
+  try {
+    const sectionsData = await sectionsResponse.json();
+    if (sectionsData.data && sectionsData.data.length > 0) {
+      const sections = sectionsData.data
+        .map((d: any) => d.sectionOrder)
+        .sort((a: number, b: number) => a - b);
+      firstSection = sections[0] ?? 0;
+    }
+  } catch {
+    // Fall back to section 0
+  }
   const blockData: IBlockMetadata = data?.[0];
 
   // Get colors (will be extracted on-demand if not cached)
@@ -81,6 +96,7 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
         isReady={isReady}
         bookData={bookData}
         coverColors={coverColors}
+        firstSection={firstSection}
       />
 
       {/* Admin Section */}

@@ -19,6 +19,7 @@ interface BookDetailHeroProps {
   isReady: boolean;
   bookData: any;
   coverColors?: CoverColors | null;
+  firstSection?: number;
 }
 
 export default function BookDetailHero({
@@ -29,6 +30,7 @@ export default function BookDetailHero({
   isReady,
   bookData,
   coverColors,
+  firstSection = 0,
 }: BookDetailHeroProps) {
   // Only use client-side extraction if no pre-fetched colors
   const coverUrl = bookId ? `https://omnibk.ai/api/v2/omnipub/${bookId}/cover_image` : null;
@@ -163,7 +165,7 @@ export default function BookDetailHero({
               disabled={!isReady}
               startIcon={<PlayArrowRoundedIcon />}
               variant="contained"
-              href={`/book/${bookId}/play/0`}
+              href={`/book/${bookId}/play/${firstSection}`}
               sx={{
                 py: 1.5,
                 px: 4,

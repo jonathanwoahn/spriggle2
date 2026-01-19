@@ -1,6 +1,6 @@
-import { downloadFile, fileExists } from '@/lib/storage';
+import { fileExists, getFileMetadata, getFileWithRange, getFileStream } from '@/lib/storage';
 import { NextRequest, NextResponse } from 'next/server';
-import { PassThrough } from 'stream';
+import { Readable } from 'stream';
 import { db } from '@/db';
 import { bookVoices } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -44,57 +44,38 @@ export const GET = async (
       return NextResponse.json({ error: 'Audio file not found' }, { status: 404 });
     }
 
-    const audioBuffer = await downloadFile(audioPath);
-    const audioLength = audioBuffer.byteLength;
+    // Get file metadata first (fast HEAD request to get size)
+    const metadata = await getFileMetadata(audioPath);
+    if (!metadata || !metadata.contentLength) {
+      return NextResponse.json({ error: 'Audio file not found' }, { status: 404 });
+    }
+    const fileSize = metadata.contentLength;
 
     if (range) {
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : audioLength - 1;
+      // Stream with range support - directly from R2
+      const { stream, contentRange, statusCode, contentLength } = await getFileWithRange(audioPath, range);
+      const webStream = Readable.toWeb(stream) as ReadableStream;
 
-      if (start >= audioLength || end >= audioLength) {
-        return NextResponse.json({ error: 'Requested range not satisfiable' }, { status: 416 });
-      }
-
-      const chunk = audioBuffer.slice(start, end + 1);
-      const audioStream = new PassThrough();
-      audioStream.end(Buffer.from(chunk));
-
-      const readableStream = new ReadableStream({
-        start(controller) {
-          audioStream.on('data', (chunk) => controller.enqueue(chunk));
-          audioStream.on('end', () => controller.close());
-          audioStream.on('error', (err) => controller.error(err));
-        },
-      });
-
-      return new NextResponse(readableStream, {
-        status: 206,
+      return new NextResponse(webStream, {
+        status: statusCode,
         headers: {
           'Content-Type': 'audio/mpeg',
-          'Content-Range': `bytes ${start}-${end}/${audioLength}`,
+          'Content-Range': contentRange || `bytes 0-${fileSize - 1}/${fileSize}`,
           'Accept-Ranges': 'bytes',
-          'Content-Length': chunk.byteLength.toString(),
+          'Content-Length': (contentLength || fileSize).toString(),
           'Cache-Control': 'public, max-age=3600, immutable',
         },
       });
     } else {
-      const audioStream = new PassThrough();
-      audioStream.end(audioBuffer);
+      // Full file - still stream directly, don't buffer
+      const { stream, contentLength } = await getFileStream(audioPath);
+      const webStream = Readable.toWeb(stream) as ReadableStream;
 
-      const readableStream = new ReadableStream({
-        start(controller) {
-          audioStream.on('data', (chunk) => controller.enqueue(chunk));
-          audioStream.on('end', () => controller.close());
-          audioStream.on('error', (err) => controller.error(err));
-        },
-      });
-
-      return new NextResponse(readableStream, {
+      return new NextResponse(webStream, {
         headers: {
           'Content-Type': 'audio/mpeg',
           'Accept-Ranges': 'bytes',
-          'Content-Length': audioLength.toString(),
+          'Content-Length': (contentLength || fileSize).toString(),
           'Cache-Control': 'public, max-age=3600, immutable',
         },
       });

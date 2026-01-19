@@ -3,22 +3,16 @@
 import { Alert, Box, IconButton, Typography } from "@mui/material";
 import PlayerProgress from "./player-progress";
 import PlayerControls from "./player-controls";
-import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { AudioChapterManager } from './audio-manager';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import BookCoverImage from "@/components/book-cover-image";
 import { PlaybackReporter } from "./playback-reporter";
 import { IBlockMetadata, IBookData } from "@/lib/types";
 import { useAccentColors } from "@/context/accent-color-context";
+import { useAudio } from "@/context/audio-context";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ChapterDrawer from '../../chapter-drawer';
-
-declare global {
-  interface Document {
-    userInteracted?: boolean;
-  }
-}
 
 interface MediaPlayerProps {
   bookData: IBookData;
@@ -28,25 +22,44 @@ interface MediaPlayerProps {
 
 export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlayerProps) {
   const params = useParams<{id: string, order: string}>();
-  const router = useRouter();
   const { colors: accentColors } = useAccentColors();
+  const {
+    loadChapter,
+    play,
+    pause,
+    seek,
+    preloadChapter,
+    isPlaying,
+    isLoading,
+    position: audioPosition,
+    duration: audioDuration,
+    chapterOrder,
+    addEventListener,
+    removeEventListener,
+  } = useAudio();
+
+  // Use chapterOrder from audio context (updated immediately) instead of params.order (stale after history.replaceState)
+  const currentOrder = chapterOrder ?? parseInt(params.order);
 
   // Extract primary color from accent colors (remove alpha suffix if present)
   const primaryColor = accentColors.primary.replace(/[a-f0-9]{2}$/i, '') || '#9966FF';
   const secondaryColor = accentColors.secondary.replace(/[a-f0-9]{2}$/i, '') || '#7A52CC';
 
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Local position for smooth seeking
+  const [localPosition, setLocalPosition] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   const [chaptersOpen, setChaptersOpen] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [availableSections, setAvailableSections] = useState<number[]>([]);
 
   const isSeekingRef = useRef(false);
-  const audioManagerRef = useRef<AudioChapterManager | null>(null);
   const reporterRef = useRef<PlaybackReporter>(PlaybackReporter.getInstance(metadata));
+  const availableSectionsRef = useRef<number[]>([]);
+  const autoplayRef = useRef(true);
+
+  // Use audioPosition when not seeking, localPosition when seeking
+  const position = isSeekingRef.current ? localPosition : audioPosition;
+  const duration = audioDuration;
 
   // Fetch available sections (ones with audio) on mount
   useEffect(() => {
@@ -57,6 +70,7 @@ export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlay
           const { data } = await res.json();
           const sections = data.map((d: any) => d.sectionOrder).sort((a: number, b: number) => a - b);
           setAvailableSections(sections);
+          availableSectionsRef.current = sections;
         }
       } catch {
         // Failed to fetch, use nav as fallback
@@ -65,100 +79,89 @@ export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlay
     fetchAvailableSections();
   }, [params.id]);
 
-  // when the application loads, create an audio manager and set up event listeners
+  // Keep autoplayRef in sync
   useEffect(() => {
-    audioManagerRef.current = new AudioChapterManager(new Audio());
+    autoplayRef.current = autoplay;
+  }, [autoplay]);
 
-    if(!audioManagerRef.current) return;
-
-    const handleLoadedmetadata = () => {
-      if (!audioManagerRef.current) return;
-      setDuration(audioManagerRef.current.duration);
-      setAudioError(null); // Clear any previous error
-    }
-
-    const handleTimeupdate = () => {
-      if (!isSeekingRef.current && !!audioManagerRef.current) {
-        const currentTime = audioManagerRef.current.currentTime;
-        reporterRef.current?.reportPlayback(currentTime);
-        setPosition(currentTime);
-        localStorage.setItem(`position-${params.id}-${params.order}`, currentTime.toString());
-      }
-    }
-
-    const handleEnded = () => {
-      if (!audioManagerRef.current) return;
-      const currentOrder = parseInt(params.order);
-      // Find the next available section
-      const nextSection = availableSections.find(s => s > currentOrder);
-      if (nextSection !== undefined && autoplay) {
-        router.push(`/book/${params.id}/play/${nextSection}`);
-      }
-    }
-
+  // Set up event listeners for the audio context
+  useEffect(() => {
     const handleError = () => {
       setAudioError('Audio not available for this chapter. It may not have been processed yet.');
-      setIsLoading(false);
-    }
+    };
 
-    audioManagerRef.current.addEventListener('loadedmetadata', handleLoadedmetadata);
-    audioManagerRef.current.addEventListener('timeupdate', handleTimeupdate);
-    audioManagerRef.current.addEventListener('ended', handleEnded);
-    audioManagerRef.current.addEventListener('error', handleError);
+    addEventListener('error', handleError);
 
     return () => {
-      if (!audioManagerRef.current) return;
-      audioManagerRef.current.removeEventListener('loadedmetadata', handleLoadedmetadata);
-      audioManagerRef.current.removeEventListener('timeupdate', handleTimeupdate);
-      audioManagerRef.current.removeEventListener('ended', handleEnded);
-      audioManagerRef.current.removeEventListener('error', handleError);
+      removeEventListener('error', handleError);
     };
-  }, [availableSections, autoplay, params.id, params.order, router]);
+  }, [addEventListener, removeEventListener]);
 
+  // Handle chapter end - separate effect with currentOrder dependency
   useEffect(() => {
-    const loadChapter = async () => {
-      if (!audioManagerRef.current) return;
-
-      setIsLoading(true);
-      setAudioError(null); // Clear previous error when loading new chapter
-      await audioManagerRef.current.prepareChapter(params.id, parseInt(params.order));
-      const savedPosition = localStorage.getItem(`position-${params.id}-${params.order}`);
-
-      if(savedPosition) {
-        setPosition(parseFloat(savedPosition));
-        audioManagerRef.current.seek(parseFloat(savedPosition));
-      }
-
-      setIsLoading(false);
-
-      if(audioManagerRef.current && autoplay) {
-        audioManagerRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch(() => {
-            // Autoplay is disabled by the browser unless a user has interacted
-          });
+    const handleEnded = () => {
+      // Find the next available section
+      const nextSection = availableSectionsRef.current.find(s => s > currentOrder);
+      if (nextSection !== undefined && autoplayRef.current) {
+        // Use loadChapter + history.replaceState instead of router.push
+        loadChapter(params.id, nextSection, true);
+        window.history.replaceState(null, '', `/book/${params.id}/play/${nextSection}`);
       }
     };
 
-    loadChapter();
+    addEventListener('ended', handleEnded);
 
     return () => {
-      if(audioManagerRef.current) {
-        audioManagerRef.current.pause();
-        setIsPlaying(false);
+      removeEventListener('ended', handleEnded);
+    };
+  }, [params.id, currentOrder, loadChapter, addEventListener, removeEventListener]);
+
+  // Handle time updates for playback reporting
+  useEffect(() => {
+    const handleTimeUpdate = () => {
+      if (!isSeekingRef.current) {
+        reporterRef.current?.reportPlayback(audioPosition);
+        localStorage.setItem(`position-${params.id}-${currentOrder}`, audioPosition.toString());
       }
+    };
+
+    addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [params.id, currentOrder, audioPosition, addEventListener, removeEventListener]);
+
+  // Load chapter when route params change
+  useEffect(() => {
+    setAudioError(null);
+    loadChapter(params.id, parseInt(params.order), autoplayRef.current);
+  }, [params.id, params.order, loadChapter]);
+
+  // Preload adjacent chapters
+  useEffect(() => {
+    if (availableSections.length === 0) return;
+
+    const nextSection = availableSections.find(s => s > currentOrder);
+    const prevSections = availableSections.filter(s => s < currentOrder);
+    const prevSection = prevSections.length > 0 ? prevSections[prevSections.length - 1] : undefined;
+
+    if (nextSection !== undefined) {
+      preloadChapter(params.id, nextSection);
     }
-  }, [params.id, params.order]);
+    if (prevSection !== undefined) {
+      preloadChapter(params.id, prevSection);
+    }
+  }, [params.id, currentOrder, availableSections, preloadChapter]);
 
 
+  // Media Session API for OS-level controls
   useEffect(() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: Array.isArray(bookData.data.title) ? bookData.data.title.join(', ') : bookData.data.title,
         artist: bookData.data.creators?.join(', ') ?? 'Unknown Artist',
-        album: bookData.data.nav?.[parseInt(params.order)]?.label ?? 'Unknown Album',
+        album: bookData.data.nav?.[currentOrder]?.label ?? 'Unknown Album',
         artwork: [
           { src: `https://omnibk.ai/api/v2/omnipub/${bookData.uuid}/cover_image`}
         ]
@@ -171,34 +174,26 @@ export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlay
       navigator.mediaSession.setActionHandler('previoustrack', () => handleSkipChapter('prev'));
       navigator.mediaSession.setActionHandler('nexttrack', () => handleSkipChapter('next'));
     }
-  }, [bookData, params.order, position]);
+  }, [bookData, currentOrder, position]);
 
-
-  const handlePlayPause = () => {
-    if (!audioManagerRef.current) return;
-    if(isPlaying) {
-      audioManagerRef.current.pause();
+  const handlePlayPause = useCallback(() => {
+    if (isPlaying) {
+      pause();
     } else {
-      audioManagerRef.current.play();
+      play();
     }
-    setIsPlaying(!isPlaying);
-  }
+  }, [isPlaying, play, pause]);
 
-  const handleSeek = (newPosition: number) => {
-    if(!audioManagerRef.current) return;
-    setPosition(newPosition);
-  };
+  const handleSeek = useCallback((newPosition: number) => {
+    setLocalPosition(newPosition);
+  }, []);
 
-  const handleSeekEnd = () => {
-    if(audioManagerRef.current) {
-      audioManagerRef.current.seek(position);
-    }
+  const handleSeekEnd = useCallback(() => {
+    seek(localPosition);
     isSeekingRef.current = false;
-  }
+  }, [localPosition, seek]);
 
-  const handleSkipChapter = (dir: 'prev' | 'next') => {
-    const currentOrder = parseInt(params.order);
-
+  const handleSkipChapter = useCallback((dir: 'prev' | 'next') => {
     // Find the next/prev available section with audio
     let targetSection: number | undefined;
     if (dir === 'next') {
@@ -211,26 +206,27 @@ export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlay
 
     if (targetSection === undefined) return;
 
-    if(isPlaying) {
-      audioManagerRef.current?.pause();
-      setIsPlaying(false);
-    }
+    // Use loadChapter + history.replaceState for instant navigation
+    loadChapter(params.id, targetSection, isPlaying);
+    window.history.replaceState(null, '', `/book/${params.id}/play/${targetSection}`);
+  }, [params.id, currentOrder, availableSections, isPlaying, loadChapter]);
 
-    router.push(`/book/${params.id}/play/${targetSection}`);
-  }
-
-  const handleSkipTime = (seconds: number) => {
-    if (!audioManagerRef.current) return;
+  const handleSkipTime = useCallback((seconds: number) => {
     const newPosition = Math.max(0, Math.min(duration, position + seconds));
-    setPosition(newPosition);
-    audioManagerRef.current.seek(newPosition);
-  }
+    seek(newPosition);
+  }, [duration, position, seek]);
 
-  const handleSeekStart = () => {
+  const handleSeekStart = useCallback(() => {
     isSeekingRef.current = true;
-  }
+    setLocalPosition(audioPosition);
+  }, [audioPosition]);
 
-  const chapterTitle = (bookData.data.nav || [])[parseInt(params.order)]?.label || 'Chapter';
+  const handleChapterSelect = useCallback((order: number) => {
+    loadChapter(params.id, order, isPlaying);
+    window.history.replaceState(null, '', `/book/${params.id}/play/${order}`);
+  }, [params.id, isPlaying, loadChapter]);
+
+  const chapterTitle = (bookData.data.nav || [])[currentOrder]?.label || 'Chapter';
 
   return (
     <Box
@@ -386,6 +382,7 @@ export default function MediaPlayer({ bookData, metadata, voiceName }: MediaPlay
         bookData={bookData}
         primaryColor={primaryColor}
         secondaryColor={secondaryColor}
+        onChapterSelect={handleChapterSelect}
       />
     </Box>
   );
