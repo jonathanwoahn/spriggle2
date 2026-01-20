@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
 import MediaPlayer from "./media-player";
-import AccentColorSetter from "@/components/accent-color-setter";
 import { isUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -57,7 +56,6 @@ export default async function PlayBookPage({ params }: { params: Promise<{ id: s
         overflow: 'hidden',
       }}
     >
-      <AccentColorSetter bookId={id} />
       <MediaPlayer bookData={bookData} metadata={metadata} voiceName={voiceName} />
     </Box>
   );

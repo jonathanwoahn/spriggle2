@@ -30,7 +30,7 @@ export default function CarouselCard({ book }: { book: IOmnipub }) {
   const highlightColor = colors.lightVibrant || '#FFE4B5';
 
   return (
-    <Box component="div" sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', }}>
+    <Box component="div" sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', }}>
       <ButtonBase
         href={"/book/" + uuid}
         sx={{

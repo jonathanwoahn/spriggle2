@@ -9,17 +9,16 @@ import { formatDuration2, getServerURL } from "@/lib/utils";
 import BookIngestionStatus from "@/components/book-ingestion/book-ingestion-status";
 import { IBlockMetadata } from "@/lib/types";
 import { isAdmin } from "@/lib/auth";
-import { CoverColors } from "@/lib/extract-colors";
 
 export default async function BookPage({params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
 
   const admin = await isAdmin();
 
-  // Fetch book metadata, colors, and available sections in parallel
-  const [blockResponse, colorsResponse, sectionsResponse] = await Promise.all([
+  // Fetch book metadata and available sections in parallel
+  // Note: Colors are fetched in layout.tsx and provided via context
+  const [blockResponse, sectionsResponse] = await Promise.all([
     fetch(`${getServerURL()}/api/metadata?blockId=${id}&type=book`),
-    fetch(`${getServerURL()}/api/book/${id}/extract-colors`),
     fetch(`${getServerURL()}/api/metadata?bookId=${id}&type=section`),
   ]);
 
@@ -39,15 +38,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
     // Fall back to section 0
   }
   const blockData: IBlockMetadata = data?.[0];
-
-  // Get colors (will be extracted on-demand if not cached)
-  let coverColors: CoverColors | null = null;
-  try {
-    const colorsData = await colorsResponse.json();
-    coverColors = colorsData.colors || null;
-  } catch {
-    // Colors extraction failed, will use client-side fallback
-  }
 
   if (!blockData) {
     return (
@@ -95,7 +85,6 @@ export default async function BookPage({params}: {params: Promise<{id: string}>}
         duration={duration}
         isReady={isReady}
         bookData={bookData}
-        coverColors={coverColors}
         firstSection={firstSection}
       />
 

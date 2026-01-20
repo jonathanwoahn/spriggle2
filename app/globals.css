@@ -204,6 +204,11 @@ html {
 
 .slick-slide > div {
   height: 100%;
+  width: 100%;
+}
+
+.slick-list {
+  overflow: hidden;
 }
 
 /* Focus visible styles */

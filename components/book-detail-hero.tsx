@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useMemo } from "react";
 import { Box, Button, Typography, Chip } from "@mui/material";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import AnimatedBookCover from "@/components/animated-book-cover";
-import { useImageColors, ImageColors } from "@/hooks/use-image-colors";
-import { useAccentColors } from "@/context/accent-color-context";
 import ChaptersButton from "@/app/book/[id]/chapters-button";
-import { CoverColors } from "@/lib/extract-colors";
+
+// Default colors (purple brand)
+const DEFAULT_GRADIENT_START = '#9966FF';
+const DEFAULT_GRADIENT_END = '#FF8866';
 
 interface BookDetailHeroProps {
   bookId: string;
@@ -18,7 +18,6 @@ interface BookDetailHeroProps {
   duration?: string | null;
   isReady: boolean;
   bookData: any;
-  coverColors?: CoverColors | null;
   firstSection?: number;
 }
 
@@ -29,61 +28,11 @@ export default function BookDetailHero({
   duration,
   isReady,
   bookData,
-  coverColors,
   firstSection = 0,
 }: BookDetailHeroProps) {
-  // Only use client-side extraction if no pre-fetched colors
-  const coverUrl = bookId ? `https://omnibk.ai/api/v2/omnipub/${bookId}/cover_image` : null;
-  const { colors: extractedColors, loading } = useImageColors(coverColors ? null : coverUrl);
-  const { setColors, resetColors } = useAccentColors();
-
-  // Merge pre-fetched colors with client-extracted colors (prefer pre-fetched)
-  const colors = useMemo<ImageColors>(() => {
-    if (coverColors) {
-      return {
-        vibrant: coverColors.vibrant,
-        muted: coverColors.muted,
-        darkVibrant: coverColors.darkVibrant,
-        darkMuted: coverColors.darkMuted,
-        lightVibrant: coverColors.lightVibrant,
-        lightMuted: coverColors.lightMuted,
-      };
-    }
-    return extractedColors;
-  }, [coverColors, extractedColors]);
-
-  // Create dynamic gradient from book colors
-  const gradientStart = colors.darkVibrant || colors.vibrant || '#9966FF';
-  const gradientEnd = colors.lightMuted || colors.muted || '#FF8866';
-
-  // Determine if colors are ready (either pre-fetched or client-extracted)
-  const colorsReady = coverColors || (!loading && (colors.darkVibrant || colors.vibrant));
-
-  // Update navbar colors when book colors are available
-  useEffect(() => {
-    if (colorsReady) {
-      const primary = colors.darkVibrant || colors.vibrant || 'rgba(153, 102, 255, 0.85)';
-      const secondary = colors.muted || colors.darkMuted || 'rgba(122, 82, 204, 0.85)';
-
-      // Add transparency for the navbar
-      const primaryWithAlpha = primary?.startsWith('#')
-        ? `${primary}d9` // ~85% opacity in hex
-        : primary || 'rgba(153, 102, 255, 0.85)';
-      const secondaryWithAlpha = secondary?.startsWith('#')
-        ? `${secondary}d9`
-        : secondary || 'rgba(122, 82, 204, 0.85)';
-
-      setColors({
-        primary: primaryWithAlpha,
-        secondary: secondaryWithAlpha,
-      });
-    }
-
-    // Reset colors when leaving the page
-    return () => {
-      resetColors();
-    };
-  }, [colorsReady, colors, setColors, resetColors]);
+  // CSS variable values for passing to child components
+  const gradientStart = `var(--cover-dark-vibrant, var(--cover-vibrant, ${DEFAULT_GRADIENT_START}))`;
+  const gradientEnd = `var(--cover-light-muted, var(--cover-muted, ${DEFAULT_GRADIENT_END}))`;
 
   return (
     <Box
